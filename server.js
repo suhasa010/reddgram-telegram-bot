@@ -21,7 +21,7 @@ const keyboard = Markup.inlineKeyboard([
   Markup.callbackButton("Delete", "delete")
 ]);
 
-const bot = new Telegraf("1155726669:AAGKOtCKIrbdvVzgfuBIKDKrF_A-Aj-QzpE");
+const bot = new Telegraf(process.env.BOT_TOKEN);
 bot.start(ctx => ctx.reply("Welcome!"));
 bot.help(ctx => ctx.reply("Send /dice\n"));
 bot.on("sticker", ctx => ctx.reply("👍"));
