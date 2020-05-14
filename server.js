@@ -47,7 +47,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
                 [
                     bot.inlineButton('🌐 Reddit', { url: `https://www.reddit.com${redditPost.permalink}` }),
                     bot.inlineButton('➡️️ Next', { callback: 'callback_query_next' }),
-                    bot.inlineButton('💬 Comments', { callback: 'callback_query_comments'})
+                    bot.inlineButton('💬 Comments', { url: `https://www.reddit.com/${redditPost.id}`})
                 ]
             ]);
 
