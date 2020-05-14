@@ -42,7 +42,6 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             // reddit post data
             let redditPost = body.data.children[postNum].data;
             redditPost.title = redditPost.title.replace(/&amp;/g, '&');
-
             // inline buttons
             const markup = bot.inlineKeyboard([
                 [
@@ -132,9 +131,10 @@ function sendGifPost(messageId, redditPost, markup) {
 function sendMessagePost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
-    const message = `${redditPost.title}\n\n\n${redditPost.selftext}\n${url}`;
-    return bot.sendMessage(messageId, message, {markup});
-}
+    let boldtitle = redditPost.title
+    const message = `${redditPost.title}\n\n${redditPost.selftext}\n\n${redditPost.score} votes\n${redditPost.num_comments} comments\nPosted by u/${redditPost.author}\n\n${url}`
+    return bot.sendMessage(messageId, message, parse_mode="MarkdownV2", {markup});
+}   
 
 
 bot.on('text', msg => {
@@ -153,6 +153,7 @@ For example if you want to get top posts of \`/r/cats\` enter:
 Default option is *top*, so *cats* will return top posts of \`/r/cats\` from past day.`
         return bot.sendMessage(msg.from.id, message, {parse});
     } else {
+        console.log(msg.from.first_name+": "+msg.text)
         const userId = `id_${msg.from.id}`;
         const messageId = msg.from.id;
         const [subreddit, option] = msg.text.toLowerCase().split(' ');
