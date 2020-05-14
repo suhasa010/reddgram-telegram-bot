@@ -1,24 +1,20 @@
-# hello-express
+# Reddit Browser Telegram Bot
 
-A server that serves a webpage, its resources, and some data
+A reddit browser inside telegram
 
+## Usage:
 
-## Your Project
-
-On the front-end,
-
-- Edit `views/index.html` to change the content of the webpage
-- `public/client.js` is the javacript that runs when you load the webpage
-- `public/style.css` is the styles for `views/index.html`
-- Drag in `assets`, like images or music, to add them to your project
-
-On the back-end,
-
-- your app starts at `server.js`
-- add frameworks and packages in `package.json`
-- safely store app secrets in `.env` (nobody can see this but you and people you invite)
-
-Click `Show` in the header to see your app live. Updates to your code will instantly deploy.
+Enter a subreddit name with an option:
+top: Top posts from past day
+topw: Top posts from past week
+topm: Top posts from past month
+topy: Top posts from past year
+all: Top posts of all time
+hot: Hot posts right now 
+new: Latest posts
+For example if you want to get top posts of /r/cats enter:
+cats top
+Default option is top, so cats will return top posts of /r/cats from past day.
 
 
 ## Made by [Glitch](https://glitch.com/)
