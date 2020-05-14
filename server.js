@@ -16,6 +16,8 @@ const TeleBot = require('telebot');
 const fs = require('fs');
 const request = require('request');
 const bot = new TeleBot(process.env.BOT_TOKEN);
+//const parse = "Markdown"
+
 
 let db = {};
 let rLimit = 100;
@@ -45,8 +47,8 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             // inline buttons
             const markup = bot.inlineKeyboard([
                 [
-                    bot.inlineButton('🌐 Reddit', { url: `https://www.reddit.com${redditPost.permalink}` }),
-                    bot.inlineButton('➡️️ Next', { callback: 'callback_query_next' }),
+                    //bot.inlineButton('🔗 Reddit', { url: `https://www.reddit.com${redditPost.permalink}` }),
+                    bot.inlineButton('⏩ Next', { callback: 'callback_query_next' }),
                     bot.inlineButton('💬 Comments', { url: `https://www.reddit.com/${redditPost.id}`})
                 ]
             ]);
@@ -131,14 +133,14 @@ function noMorePosts(messageId) {
 function sendImagePost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
-    const caption = `${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
+    const caption = `🔖 ${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
     return bot.sendPhoto(messageId, url, {caption, markup});
 }
 
 function sendLinkPost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
-    const message = `${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
+    const message = `🔖 ${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
     return bot.sendMessage(messageId, message, {markup});
 }
 
@@ -148,7 +150,7 @@ function sendGifPost(messageId, redditPost, markup) {
     let gifArr = redditPost.preview.images[0].variants.mp4.resolutions;
     let gif = gifArr[gifArr.length - 1].url;
     gif = gif.replace(/&amp;/g, '&');
-    const caption = `${redditPost.title}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
+    const caption = `🔖 ${redditPost.title}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
     return bot.sendVideo(messageId, gif, {caption, markup});
 }
 
@@ -156,7 +158,7 @@ function sendVideoPost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
     let boldtitle = redditPost.title
-    const message = `${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`
+    const message = `🔖 ${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`
     return bot.sendMessage(messageId, message, {markup});
 }
 
@@ -164,11 +166,11 @@ function sendMessagePost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
     let boldtitle = redditPost.title
-    const message = `Title: ${redditPost.title}\n\n\n${redditPost.selftext}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`
+    const message = `🔖 ${redditPost.title}\n\n📝 ${redditPost.selftext}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`
     //\n\n${url}
     return bot.sendMessage(messageId, message, {markup});
 }   
-
+ 
 
 bot.on('text', msg => {
     const parse = "Markdown";
