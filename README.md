@@ -5,15 +5,24 @@ A reddit browser inside telegram
 ## Usage:
 
 Enter a subreddit name with an option:
+
 top: Top posts from past day
+
 topw: Top posts from past week
+
 topm: Top posts from past month
+
 topy: Top posts from past year
+
 all: Top posts of all time
+
 hot: Hot posts right now 
+
 new: Latest posts
+
 For example if you want to get top posts of /r/cats enter:
 cats top
+
 Default option is top, so cats will return top posts of /r/cats from past day.
 
 
