@@ -227,7 +227,7 @@ const TextCommand = telegram.TextCommand;
 //const TelegramBaseController = telegram.TelegramBaseController
 
 var api = new telegram({
-  token: "1155726669:AAGKOtCKIrbdvVzgfuBIKDKrF_A-Aj-QzpE",
+  token: "",
   updates: {
     enabled: true
   }
