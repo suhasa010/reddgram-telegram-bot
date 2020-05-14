@@ -54,13 +54,28 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             // if post is an image or if it's a gif or a link
             if (/\.(jpe?g|png)$/.test(redditPost.url) || 
                 redditPost.domain === 'i.reddituploads.com' || 
-                redditPost.domain === 'i.redd.it') {
+                redditPost.domain === 'i.redd.it' ||
+                redditPost.domain === 'imgur.com' ||
+                redditPost.domain === 'preview.reddit.com'
+                ) {
                 // sendPlsWait(messageId);
                 return sendImagePost(messageId, redditPost, markup);
-            } else if (redditPost.preview && redditPost.preview.images[0].variants.mp4) {
+            }
+            else if (redditPost.preview && redditPost.preview.images[0].variants.mp4) {
                 // sendPlsWait(messageId);
                 sendGifPost(messageId, redditPost, markup);
-            } else {
+            }
+            else if (redditPost.domain === 'youtu.be' ||
+                     redditPost.domain === 'youtube.com' ||
+                     redditPost.domain === 'v.redd.it' ||
+                     redditPost.domain === 'gfycat.com') {
+                return sendVideoPost(messageId, redditPost, markup)       
+            }
+            else if ((/http(s)?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi.test(redditPost.url)) && !redditPost.selftext) {
+                console.log("link post")
+                return sendLinkPost(messageId, redditPost, markup)
+            } 
+            else {
                 return sendMessagePost(messageId, redditPost, markup);
             }
             
@@ -116,24 +131,42 @@ function noMorePosts(messageId) {
 function sendImagePost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
-    let caption = redditPost.title;
+    const caption = `${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
     return bot.sendPhoto(messageId, url, {caption, markup});
 }
 
+function sendLinkPost(messageId, redditPost, markup) {
+    let url = redditPost.url;
+    url = url.replace(/&amp;/g, '&');
+    const message = `${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
+    return bot.sendMessage(messageId, message, {markup});
+}
+
 function sendGifPost(messageId, redditPost, markup) {
+    //let url = redditPost.url;
+    //url = url.replace(/&amp;/g, '&');
     let gifArr = redditPost.preview.images[0].variants.mp4.resolutions;
     let gif = gifArr[gifArr.length - 1].url;
     gif = gif.replace(/&amp;/g, '&');
-    const caption = redditPost.title;
+    const caption = `${redditPost.title}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`;
     return bot.sendVideo(messageId, gif, {caption, markup});
+}
+
+function sendVideoPost(messageId, redditPost, markup) {
+    let url = redditPost.url;
+    url = url.replace(/&amp;/g, '&');
+    let boldtitle = redditPost.title
+    const message = `${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`
+    return bot.sendMessage(messageId, message, {markup});
 }
 
 function sendMessagePost(messageId, redditPost, markup) {
     let url = redditPost.url;
     url = url.replace(/&amp;/g, '&');
     let boldtitle = redditPost.title
-    const message = `${redditPost.title}\n\n${redditPost.selftext}\n\n${redditPost.score} votes\n${redditPost.num_comments} comments\nPosted by u/${redditPost.author}\n\n${url}`
-    return bot.sendMessage(messageId, message, parse_mode="MarkdownV2", {markup});
+    const message = `Title: ${redditPost.title}\n\n\n${redditPost.selftext}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted by u/${redditPost.author}`
+    //\n\n${url}
+    return bot.sendMessage(messageId, message, {markup});
 }   
 
 
@@ -228,7 +261,7 @@ const TextCommand = telegram.TextCommand;
 //const TelegramBaseController = telegram.TelegramBaseController
 
 var api = new telegram({
-  token: "1155726669:AAGKOtCKIrbdvVzgfuBIKDKrF_A-Aj-QzpE",
+  token: "",
   updates: {
     enabled: true
   }
