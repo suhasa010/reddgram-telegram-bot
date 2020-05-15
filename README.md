@@ -33,3 +33,5 @@ Default option is top, so cats will return top posts of /r/cats from past day.
 Find out more [about Glitch](https://glitch.com/about).
 
 ( ᵔ ᴥ ᵔ )
+
+## Fork of @ReddBot by @thedevs
