@@ -1,4 +1,4 @@
-# Reddit Browser Telegram Bot
+# Reddgram Telegram Bot
 
 A reddit browser inside telegram
 
