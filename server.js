@@ -13,11 +13,32 @@ setInterval(() => {
 
 //var logger = require('logger').createLogger(); // logs to STDOUT
 var logger = require("logger").createLogger("development.log"); // logs to a file
-let options = {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true, weekday: 'short', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Kolkata', timeZoneName: 'short'}
-logger.format = function(level, date, message) { return [level, ' [', new Date().toLocaleString("en-IN", options), '] ', message].join(''); }; 
+
+//custom date for logging
+let options = {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hour12: true,
+  weekday: "short",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+  timeZone: "Asia/Kolkata",
+  timeZoneName: "short"
+};
+logger.format = function(level, date, message) {
+  return [
+    level,
+    " [",
+    new Date().toLocaleString("en-IN", options),
+    "] ",
+    message
+  ].join("");
+};
 
 //reddit browser
-const Telegraf = require("telegraf")
+const Telegraf = require("telegraf");
 const { Extra, Markup } = Telegraf;
 const session = require("telegraf/session");
 
@@ -74,7 +95,6 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "preview.reddit.com"
         ) {
           // sendPlsWait(messageId);
-          logger.info("request: image post");
           return sendImagePost(messageId, redditPost, markup);
         }
         //gif
@@ -83,7 +103,6 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.preview.images[0].variants.mp4
         ) {
           // sendPlsWait(messageId);
-          logger.info("request: gif post");
           sendGifPost(messageId, redditPost, markup);
         }
         //video
@@ -94,17 +113,19 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === ".redd.it" ||
           redditPost.domain === "gfycat.com"
         ) {
-          logger.info("request: video/gif post");
           return sendVideoPost(messageId, redditPost, markup);
         }
         //link
-        else if (/http(s)?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi.test(redditPost.url) && !redditPost.selftext) {
-          logger.info("request: link post");
+        else if (
+          /http(s)?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi.test(
+            redditPost.url
+          ) &&
+          !redditPost.selftext
+        ) {
           return sendLinkPost(messageId, redditPost, markup);
         }
         //text
         else {
-          logger.info("request: text post");
           return sendMessagePost(messageId, redditPost, markup);
         }
 
@@ -139,29 +160,32 @@ function getOptions(option, rlimit) {
   }
 }
 
+//parse_mode option for bot.sendMessage()
+const parse = "HTML"
+
 function sendErrorMsg(messageId) {
-  const errorMsg = `ERROR: Couldn't find the subreddit. Use /help for instructions.`;
+  const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg);
+  return bot.sendMessage(messageId, errorMsg, {parse});
 }
 
 function sendLimitMsg(messageId) {
-  const errorMsg = `ERROR: Sorry, we can't show more than ${rLimit} posts for one option. Please change your subreddit or option. 
-Use /help for instructions.`;
+  const errorMsg = `<i>ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option. 
+Use /help for instructions.</i>`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg);
+  return bot.sendMessage(messageId, errorMsg, {parse});
 }
 
 function selfTextLimitExceeded(messageId) {
-  const errorMsg = `ERROR: Sorry, The content of this post is too long to be displayed here. Please click on Comments button or Next button to try and load the next post....`;
+  const errorMsg = `......\n\n<i>ERROR: Sorry, The content of this post has exceeded the limit. Please click on Comments button to view the full thread or Next button to try and load the next post....</i>`;
   logger.error(errorMsg);
   return errorMsg;
 }
 
 function noMorePosts(messageId) {
-  const errorMsg = `No more posts. Use /help for instructions`;
+  const errorMsg = `<i>ERROR: No more threads. Use /help for instructions</i>`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg);
+  return bot.sendMessage(messageId, errorMsg, {parse});
 }
 
 /*function sendPlsWait(messageId) {
@@ -178,10 +202,14 @@ function sendImagePost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const caption = `🔖 ${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted ${timeago} ago by u/${redditPost.author} in r/${redditPost.subreddit}`;
-  //logger.info(messageId+" "+url+" "+caption+" "+markup)
+  const caption = `🔖 <b>${redditPost.title}</b>\n
+${url}\n
+⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
+✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+
+  logger.info("Request completed: image thread");
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
-  return bot.sendMessage(messageId, caption, { markup });
+  return bot.sendMessage(messageId, caption, {parse, markup });
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
 }
 
@@ -194,8 +222,13 @@ function sendLinkPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const message = `🔖 ${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted ${timeago} ago by u/${redditPost.author} in r/${redditPost.subreddit}`;
-  return bot.sendMessage(messageId, message, { markup });
+  const message = `🔖 <b>${redditPost.title}</b>\n
+${url}
+\n⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
+✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+
+    logger.info("Request completed: link thread");
+    return bot.sendMessage(messageId, message, {parse, markup});
 }
 
 function sendGifPost(messageId, redditPost, markup) {
@@ -210,8 +243,11 @@ function sendGifPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const caption = `🔖 ${redditPost.title}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted ${timeago} ago by u/${redditPost.author} in r/${redditPost.subreddit}`;
-  return bot.sendVideo(messageId, gif, { caption, markup });
+  const caption = `🔖 <b>${redditPost.title}</b>\n
+⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
+✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+  logger.info("Request completed: gif thread");
+  return bot.sendVideo(messageId, gif, {parse, caption, markup });
 }
 
 function sendVideoPost(messageId, redditPost, markup) {
@@ -224,8 +260,12 @@ function sendVideoPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const message = `🔖 ${redditPost.title}\n\n${url}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted ${timeago} ago by u/${redditPost.author} in r/${redditPost.subreddit}`;
-  return bot.sendMessage(messageId, message, { markup });
+  const message = `🔖 <b>${redditPost.title}</b>\n
+${url}\n
+⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
+✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+  logger.info("Request completed: video/gif thread");
+  return bot.sendMessage(messageId, message, {parse,markup});
 }
 
 function sendMessagePost(messageId, redditPost, markup) {
@@ -245,17 +285,25 @@ function sendMessagePost(messageId, redditPost, markup) {
   } catch (err) {
     return sendErrorMsg(messageId);
   }
-
-  if (redditPost.selftext.length > 4096) {
+  if (redditPost.selftext.length > 3700) {
+    const preview = redditPost.selftext.slice(0,3700);
     const message =
-      `🔖 ${redditPost.title}\n\n📝` +
+      `🔖 <b>${redditPost.title}</b>\n\n📝` +
+      preview+
       selfTextLimitExceeded(messageId) +
-      `\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted ${timeago} ago by u/${redditPost.author} in r/${redditPost.subreddit}`;
-    return bot.sendMessage(messageId, message, { markup });
+      `\n\n⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
+✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+    return bot.sendMessage(messageId, message, {parse, markup });
   }
-  const message = `🔖 ${redditPost.title}\n\n📝 ${redditPost.selftext}\n\n⬆️ ${redditPost.score} votes\n💬 ${redditPost.num_comments} comments\n✏️ Posted ${timeago} ago by u/${redditPost.author} in r/${redditPost.subreddit}`;
+  const message = `🔖 <b>${redditPost.title}</b>\n
+📝 ${redditPost.selftext}\n
+⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
+✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
   //\n\n${url}
-  return bot.sendMessage(messageId, message, { markup });
+
+  logger.info("Request completed: text thread");
+  
+  return bot.sendMessage(messageId, message, {parse, markup});
 }
 
 /*bot.start(ctx => {
@@ -268,44 +316,47 @@ function sendMessagePost(messageId, redditPost, markup) {
 bot.on("text", msg => {
   const parse = "Markdown";
   //start/help menu
-  if (msg.text === "/start" || msg.text === "/help" || msg.text === "/help@RedditBrowserBot" || msg.text === "/start@RedditBrowserBot") {
+  if (
+    msg.text === "/start" ||
+    msg.text === "/help" ||
+    msg.text === "/help@RedditBrowserBot" ||
+    msg.text === "/start@RedditBrowserBot"
+  ) {
     const message = `*Welcome to Reddgram Bot*
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
 Enter a subreddit name with an option or send /list for most popular subreddits:
 
-1. _(default)_ *hot* - Hot posts from past day 
-2. *top* - Top posts from past day
-3. *topw* - Top posts from past week
-4. *topm* - Top posts from past month
-5. *topy* - Top posts from past year
-6. *all* - Top posts of all time
-7. *new* - Latest posts
-8. _(newly added)_ *toph* - Top posts from past hour
+1. _(default)_ *hot* - Hot threads from past day 
+2. *top* - Top threads from past day
+3. *topw* - Top threads from past week
+4. *topm* - Top threads from past month
+5. *topy* - Top threads from past year
+6. *all* - Top threads of all time
+7. *new* - Latest threads
+8. _(newly added)_ *toph* - Top threads from past hour
 
 Examples:
-1. If you want to get top posts of *r/aww*, Enter: 
+1. If you want to get top threads of *r/aww*, Enter: 
                 \`aww top\`
-Default option is *hot*, so *aww* will return hot posts of *r/aww* from past day
+Default option is *hot*, so *aww* will return hot threads of *r/aww* from past day
 
 2. You can also browse *random* subreddit  or  *all*. just send \`random top\` or \`all all\`
 
 Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
-  logger.info(
-    msg.from.first_name + "(" + msg.from.username + ")" + ": " + msg.text
-  );  
-  return bot.sendMessage(msg.from.id, message, { parse });
+    logger.info("User: " + msg.text);
+    return bot.sendMessage(msg.from.id, message, { parse });
   }
 
   //list of popular subreddits
   else if (msg.text === "/list") {
-    const message = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* posts:
-  (and of course you can customize the option to get any of these /options. eg. \`/aww all\` fetches all time popular posts of r/aww)
+    const message = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
+  (and of course you can customize the option to get any of these */options*. eg. \`/aww all\` fetches all time popular threads of r/aww)
   
-  💡Tip for mobile users: Touch and hold on any of the links to be able to edit and send with an option  
+  _💡Tip for mobile users: Touch and hold on any of the links to be able to edit and send with an option_  
   
-  1. /aww
+*  1. /aww
 
   2. /cats
   
@@ -369,38 +420,33 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
   
   32. /dataisbeautiful
   
-  33. /music
+  33. /music*
   `;
-    logger.info(
-    msg.from.first_name + "(" + msg.from.username + ")" + ": " + msg.text
-    );
-    return bot.sendMessage(msg.from.id, message, {parse});  
+    logger.info("User: " + msg.text);
+    return bot.sendMessage(msg.from.id, message, { parse });
   }
   //options
   else if (msg.text === "/options") {
     const message = `*Options:*
 
-1. _(default)_ *hot* - Hot posts from past day 
-2. *top* - Top posts from past day
-3. *topw* - Top posts from past week
-4. *topm* - Top posts from past month
-5. *topy* - Top posts from past year
-6. *all* - Top posts of all time
-7. *new* - Latest posts
-8. _(newly added)_ *toph* - Top posts from past hour
+1. _(default)_ *hot* - Hot threads from past day 
+2. *top* - Top threads from past day
+3. *topw* - Top threads from past week
+4. *topm* - Top threads from past month
+5. *topy* - Top threads from past year
+6. *all* - Top threads of all time
+7. *new* - Latest threads
+8. _(newly added)_ *toph* - Top threads from past hour
     `;
-    logger.info(
-      msg.from.first_name + "(" + msg.from.username + ")" + ": " + msg.text
-      );
-      return bot.sendMessage(msg.from.id, message, {parse});  
-  } 
+    logger.info("User: " + msg.text);
+    return bot.sendMessage(msg.from.id, message, { parse });
+  }
   //core logic
   else {
-    logger.info(
-      msg.from.first_name + "(" + msg.from.username + ")" + ": " + msg.text
-    );
-    if(msg.text.includes('/')) {
-      msg.text = msg.text.slice(1,msg.text.length);  
+    logger.info("User: " + msg.text);
+
+    if (msg.text.includes("/")) {
+      msg.text = msg.text.slice(1, msg.text.length);
     }
     const userId = `id_${msg.from.id}`;
     const messageId = msg.from.id;
@@ -415,9 +461,7 @@ bot.on("callbackQuery", msg => {
   if (msg.data === "callback_query_next") {
     const userId = `id_${msg.from.id}`;
     const messageId = msg.from.id;
-    logger.info(
-      msg.from.first_name + "(" + msg.from.username + ") clicked next"
-    );
+    logger.info("User: clicked next");
     let subreddit = "",
       option = "";
     let postNum = 0;
@@ -427,13 +471,14 @@ bot.on("callbackQuery", msg => {
     } else {
       return bot.sendMessage(
         messageId,
-        "Sorry, please send the subreddit name with option again"
+        "_ERROR: Sorry, please send the subreddit name with option again_"
       );
     }
 
     if (db[userId]["option"]) {
       option = db[userId]["option"];
-    } else { //default sort = hot
+    } else {
+      //default sort = hot
       option = "hot";
     }
 
