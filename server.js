@@ -42,12 +42,12 @@ const Telegraf = require("telegraf");
 const { Extra, Markup } = Telegraf;
 const session = require("telegraf/session");
 
+var parser = require('tld-extract');
 const TeleBot = require("telebot");
 const fs = require("fs");
 const request = require("request");
 
 const bot = new TeleBot(process.env.BOT_TOKEN);
-//const parse = "Markdown"
 var prettytime = require("prettytime");
 
 let db = {};
@@ -92,7 +92,8 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "i.reddituploads.com" ||
           redditPost.domain === "i.redd.it" ||
           redditPost.domain === "imgur.com" ||
-          redditPost.domain === "preview.reddit.com"
+          redditPost.domain === "preview.reddit.com" ||
+          redditPost.domain === "preview.redd.it"
         ) {
           // sendPlsWait(messageId);
           return sendImagePost(messageId, redditPost, markup);
@@ -110,7 +111,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "youtu.be" ||
           redditPost.domain === "youtube.com" ||
           redditPost.domain === "v.redd.it" ||
-          redditPost.domain === ".redd.it" ||
+          redditPost.domain === "i.redd.it" ||
           redditPost.domain === "gfycat.com"
         ) {
           return sendVideoPost(messageId, redditPost, markup);
@@ -161,29 +162,29 @@ function getOptions(option, rlimit) {
 }
 
 //parse_mode option for bot.sendMessage()
-const parse = "HTML"
+const parse = "Markdown"
 
 function sendErrorMsg(messageId) {
-  const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
+  const errorMsg = `_ERROR: Couldn't find the subreddit. Use /help for instructions._`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, {parse});
 }
 
 function sendLimitMsg(messageId) {
-  const errorMsg = `<i>ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option. 
-Use /help for instructions.</i>`;
+  const errorMsg = `_ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option. 
+Use /help for instructions._`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, {parse});
 }
 
 function selfTextLimitExceeded(messageId) {
-  const errorMsg = `......\n\n<i>ERROR: Sorry, The content of this post has exceeded the limit. Please click on Comments button to view the full thread or Next button to try and load the next post....</i>`;
+  const errorMsg = `......\n\n_ERROR: Sorry, The content of this post has exceeded the limit. Please click on Comments button to view the full thread or Next button to try and load the next post...._`;
   logger.error(errorMsg);
   return errorMsg;
 }
 
 function noMorePosts(messageId) {
-  const errorMsg = `<i>ERROR: No more threads. Use /help for instructions</i>`;
+  const errorMsg = `_ERROR: No more threads. Use /help for instructions_`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, {parse});
 }
@@ -194,6 +195,7 @@ function noMorePosts(messageId) {
 }*/
 
 function sendImagePost(messageId, redditPost, markup) {
+  const parse = "HTML"
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
   //post time
@@ -202,18 +204,31 @@ function sendImagePost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const caption = `🔖 <b>${redditPost.title}</b>\n
-${url}\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
 
-  logger.info("Request completed: image thread");
+  var {tld, domain, sub} = parser(redditPost.url)
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split('.')
+  if(websitename[0] === "redd" 
+  )
+    var site = `${websitename[0]}${websitename[1]}`
+  else
+    var site = websitename[0]
+  
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
+  const caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+⬆️ <b>${redditPost.score} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+
+  logger.info("Request completed: image/gif thread");
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
   return bot.sendMessage(messageId, caption, {parse, markup });
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
 }
 
 function sendLinkPost(messageId, redditPost, markup) {
+  const parse = "HTML"
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
   //post time
@@ -222,11 +237,16 @@ function sendLinkPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const message = `🔖 <b>${redditPost.title}</b>\n
-${url}
-\n⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
 
+  var {tld, domain, sub} = parser(redditPost.url)
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split('.')
+  
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+  const message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${websitename[0]})</b>\n
+⬆️ <b>${redditPost.score} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+//<a href="${url}">[Link]</a>
     logger.info("Request completed: link thread");
     return bot.sendMessage(messageId, message, {parse, markup});
 }
@@ -242,10 +262,13 @@ function sendGifPost(messageId, redditPost, markup) {
     short: true,
     decimals: 0
   });
+  
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
   timeago = timeago.replace(/\s/g, "");
-  const caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+  const caption = `🔖 *${redditPost.title}*\n
+⬆️ *${redditPost.score} points* (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: gif thread");
   return bot.sendVideo(messageId, gif, {parse, caption, markup });
 }
@@ -253,6 +276,7 @@ function sendGifPost(messageId, redditPost, markup) {
 function sendVideoPost(messageId, redditPost, markup) {
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
+  const parse = "HTML"
   //let boldtitle = redditPost.title
   //post time
   var timeago = prettytime(redditPost.created_utc * 1000 - Date.now(), {
@@ -260,10 +284,21 @@ function sendVideoPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const message = `🔖 <b>${redditPost.title}</b>\n
-${url}\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+  var {tld, domain, sub} = parser(redditPost.url)
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split('.')
+  if(websitename[0] === "youtu" || 
+     websitename[0] === "redd" 
+  )
+    var site = `${websitename[0]}${websitename[1]}`
+  else
+    var site = websitename[0]
+  
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
+  const message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+⬆️ <b>${redditPost.score} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: video/gif thread");
   return bot.sendMessage(messageId, message, {parse,markup});
 }
@@ -285,20 +320,24 @@ function sendMessagePost(messageId, redditPost, markup) {
   } catch (err) {
     return sendErrorMsg(messageId);
   }
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
   if (redditPost.selftext.length > 3700) {
-    const preview = redditPost.selftext.slice(0,3700);
+    const preview = redditPost.selftext.slice(0,1000);
     const message =
-      `🔖 <b>${redditPost.title}</b>\n\n📝` +
+      `🔖 *${redditPost.title}*\n\n📝` +
       preview+
       selfTextLimitExceeded(messageId) +
-      `\n\n⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+      `\n\n⬆️ *${redditPost.score} points* (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in *r‏/${redditPost.subreddit}* by u/${redditPost.author}`;
+    logger.info("Request completed: long text thread");
     return bot.sendMessage(messageId, message, {parse, markup });
   }
-  const message = `🔖 <b>${redditPost.title}</b>\n
+  const message = `🔖 *${redditPost.title}*\n
 📝 ${redditPost.selftext}\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+⬆️ *${redditPost.score} points* (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   //\n\n${url}
 
   logger.info("Request completed: text thread");
