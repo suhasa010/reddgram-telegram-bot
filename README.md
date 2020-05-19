@@ -22,7 +22,7 @@ You can customize the "sort" option with any of the following(you can view this 
 
 2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
 
-              \`aww top\` or \`\/aww top\` (long press to copy).
+              aww top or /aww top (long press to copy).
 
 Default option is *hot*, so /aww will return hottest threads from the past day.
 
