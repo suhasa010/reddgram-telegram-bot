@@ -5,9 +5,9 @@ Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right
 <b>How to use Reddgram:</b>
 
 1. Format: 
-*subreddit_name  sort_option\*  
+subreddit_name  sort_option\  
             (or) 
-*\/subreddit_name  sort_option\*
+/subreddit_name  sort_option
 
 You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
 
@@ -22,7 +22,7 @@ You can customize the "sort" option with any of the following(you can view this 
 
 2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
 
-              aww top or /aww top (long press to copy).
+              aww top or /aww top
 
 Default option is *hot*, so /aww will return hottest threads from the past day.
 
