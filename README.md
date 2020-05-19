@@ -33,3 +33,5 @@ Default option is *hot*, so /aww will return hottest threads from the past day.
 5. Send /popular for most popular threads from all subreddits.
 
 Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k
+
+Fork of <a href="https://github.com/poeti8/reddbot">@ReddBot</a>. Thanks for making this little project possible.
