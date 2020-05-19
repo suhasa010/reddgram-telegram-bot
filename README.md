@@ -1,4 +1,4 @@
-##Welcome to Reddgram Bot
+<b>Welcome to Reddgram Bot<b>
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
