@@ -1,8 +1,8 @@
-<b>Welcome to Reddgram Bot<b>
+<h1>Reddgram Telegram Bot</h1>
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
-##How to use Reddgram:
+<b>How to use Reddgram:</b>
 
 1. Format: 
 *subreddit_name  sort_option\*  
