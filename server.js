@@ -38,16 +38,14 @@ logger.format = function(level, date, message) {
 };
 
 //reddit browser
-const Telegraf = require("telegraf");
-const { Extra, Markup } = Telegraf;
-const session = require("telegraf/session");
+
+var parser = require("tld-extract");
 
 const TeleBot = require("telebot");
 const fs = require("fs");
 const request = require("request");
 
 const bot = new TeleBot(process.env.BOT_TOKEN);
-//const parse = "Markdown"
 var prettytime = require("prettytime");
 
 let db = {};
@@ -92,7 +90,8 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "i.reddituploads.com" ||
           redditPost.domain === "i.redd.it" ||
           redditPost.domain === "imgur.com" ||
-          redditPost.domain === "preview.reddit.com"
+          redditPost.domain === "preview.reddit.com" ||
+          redditPost.domain === "preview.redd.it"
         ) {
           // sendPlsWait(messageId);
           return sendImagePost(messageId, redditPost, markup);
@@ -110,7 +109,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "youtu.be" ||
           redditPost.domain === "youtube.com" ||
           redditPost.domain === "v.redd.it" ||
-          redditPost.domain === ".redd.it" ||
+          redditPost.domain === "i.redd.it" ||
           redditPost.domain === "gfycat.com"
         ) {
           return sendVideoPost(messageId, redditPost, markup);
@@ -161,19 +160,19 @@ function getOptions(option, rlimit) {
 }
 
 //parse_mode option for bot.sendMessage()
-const parse = "HTML"
+const parse = "HTML";
 
 function sendErrorMsg(messageId) {
-  const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
+  const errorMsg = `_ERROR: Couldn't find the subreddit. Use /help for instructions._`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg, {parse});
+  return bot.sendMessage(messageId, errorMsg, { parse });
 }
 
 function sendLimitMsg(messageId) {
-  const errorMsg = `<i>ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option. 
-Use /help for instructions.</i>`;
+  const errorMsg = `_ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option. 
+Use /help for instructions._`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg, {parse});
+  return bot.sendMessage(messageId, errorMsg, { parse });
 }
 
 function selfTextLimitExceeded(messageId) {
@@ -183,9 +182,9 @@ function selfTextLimitExceeded(messageId) {
 }
 
 function noMorePosts(messageId) {
-  const errorMsg = `<i>ERROR: No more threads. Use /help for instructions</i>`;
+  const errorMsg = `_ERROR: No more threads. Use /help for instructions_`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg, {parse});
+  return bot.sendMessage(messageId, errorMsg, { parse });
 }
 
 /*function sendPlsWait(messageId) {
@@ -194,6 +193,7 @@ function noMorePosts(messageId) {
 }*/
 
 function sendImagePost(messageId, redditPost, markup) {
+  const parse = "HTML";
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
   //post time
@@ -202,18 +202,32 @@ function sendImagePost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const caption = `🔖 <b>${redditPost.title}</b>\n
-${url}\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
 
-  logger.info("Request completed: image thread");
+  var { tld, domain, sub } = parser(redditPost.url);
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split(".");
+  if (websitename[0] === "redd")
+    var site = `${websitename[0]}${websitename[1]}`;
+  else var site = websitename[0];
+
+  if (redditPost.score > 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
+  const caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+
+  logger.info("Request completed: image/gif thread");
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
-  return bot.sendMessage(messageId, caption, {parse, markup });
+  return bot.sendMessage(messageId, caption, { parse, markup });
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
 }
 
 function sendLinkPost(messageId, redditPost, markup) {
+  const parse = "HTML";
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
   //post time
@@ -222,13 +236,28 @@ function sendLinkPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const message = `🔖 <b>${redditPost.title}</b>\n
-${url}
-\n⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
 
-    logger.info("Request completed: link thread");
-    return bot.sendMessage(messageId, message, {parse, markup});
+  var { tld, domain, sub } = parser(redditPost.url);
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split(".");
+
+  if (redditPost.score > 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+  const message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
+    websitename[0]
+  })</b>\n
+⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${
+    redditPost.num_comments
+  } comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${
+    redditPost.author
+  }`;
+  //<a href="${url}">[Link]</a>
+  logger.info("Request completed: link thread");
+  return bot.sendMessage(messageId, message, { parse, markup });
 }
 
 function sendGifPost(messageId, redditPost, markup) {
@@ -242,17 +271,25 @@ function sendGifPost(messageId, redditPost, markup) {
     short: true,
     decimals: 0
   });
+
+  if (redditPost.score > 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
   timeago = timeago.replace(/\s/g, "");
   const caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+⬆️ *<b>{points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: gif thread");
-  return bot.sendVideo(messageId, gif, {parse, caption, markup });
+  return bot.sendVideo(messageId, gif, { parse, caption, markup });
 }
 
 function sendVideoPost(messageId, redditPost, markup) {
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
+  const parse = "HTML";
   //let boldtitle = redditPost.title
   //post time
   var timeago = prettytime(redditPost.created_utc * 1000 - Date.now(), {
@@ -260,12 +297,23 @@ function sendVideoPost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-  const message = `🔖 <b>${redditPost.title}</b>\n
-${url}\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+  var { tld, domain, sub } = parser(redditPost.url);
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split(".");
+  if (websitename[0] === "youtu" || websitename[0] === "redd")
+    var site = `${websitename[0]}${websitename[1]}`;
+  else var site = websitename[0];
+  if (redditPost.score > 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
+  const message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: video/gif thread");
-  return bot.sendMessage(messageId, message, {parse,markup});
+  return bot.sendMessage(messageId, message, { parse, markup });
 }
 
 function sendMessagePost(messageId, redditPost, markup) {
@@ -285,25 +333,37 @@ function sendMessagePost(messageId, redditPost, markup) {
   } catch (err) {
     return sendErrorMsg(messageId);
   }
+
+  var upvote_ratio = redditPost.upvote_ratio * 100;
+
   if (redditPost.selftext.length > 3700) {
-    const preview = redditPost.selftext.slice(0,3700);
+    if (redditPost.score > 1000)
+      var points = (redditPost.score / 1000).toFixed(1) + "k";
+    else var points = redditPost.score;
+    const preview = redditPost.selftext.slice(0, 1000);
     const message =
-      `🔖 <b>${redditPost.title}</b>\n\n📝` +
-      preview+
+      `🔖 *${redditPost.title}*\n\n📝` +
+      preview +
       selfTextLimitExceeded(messageId) +
-      `\n\n⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
-    return bot.sendMessage(messageId, message, {parse, markup });
+      `\n\n⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+    logger.info("Request completed: long text thread");
+    return bot.sendMessage(messageId, message, { parse, markup });
   }
+
+  if (redditPost.score > 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
   const message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n
-⬆️ <b>${redditPost.score} points</b> • 💬 ${redditPost.num_comments} comments
-✍️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   //\n\n${url}
 
   logger.info("Request completed: text thread");
-  
-  return bot.sendMessage(messageId, message, {parse, markup});
+
+  return bot.sendMessage(messageId, message, { parse, markup });
 }
 
 /*bot.start(ctx => {
@@ -326,23 +386,37 @@ bot.on("text", msg => {
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
-Enter a subreddit name with an option or send /list for most popular subreddits:
+*How to use Reddgram:*
+
+1. *Format:* 
+*subreddit_name  sort_option\*  
+            (or) 
+*\/subreddit_name  sort_option\*
+
+You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
 
 1. _(default)_ *hot* - Hot threads from past day 
 2. *top* - Top threads from past day
-3. *topw* - Top threads from past week
-4. *topm* - Top threads from past month
-5. *topy* - Top threads from past year
-6. *all* - Top threads of all time
-7. *new* - Latest threads
-8. _(newly added)_ *toph* - Top threads from past hour
+3. *toph* - Top threads from past hour
+4. *topw* - Top threads from past week
+5. *topm* - Top threads from past month
+6. *topy* - Top threads from past year
+7. *all* - Top threads of all time
+8. *new* - Latest threads
 
-Examples:
-1. If you want to get top threads of *r/aww*, Enter: 
-                \`aww top\`
-Default option is *hot*, so *aww* will return hot threads of *r/aww* from past day
+2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
 
-2. You can also browse *random* subreddit  or  *all*. just send \`random top\` or \`all all\`
+              \`aww top\` or \`\/aww top\` (long press to copy).
+
+Default option is *hot*, so /aww will return hottest threads from the past day.
+
+3. You can also browse any *random* subreddit or *all* which returns all the hottest threads from all subreddits. To do that, just send /random or /all respectively.
+
+4. Send /list for a list of most popular subreddits.
+
+5. Send /popular for most popular threads from all subreddits.
+
+_💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 
 Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
     logger.info("User: " + msg.text);
@@ -352,11 +426,11 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
   //list of popular subreddits
   else if (msg.text === "/list") {
     const message = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
-  (and of course you can customize the option to get any of these */options*. eg. \`/aww all\` fetches all time popular threads of r/aww)
+  (and of course you can customize the "sort" option with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
   
-  _💡Tip for mobile users: Touch and hold on any of the links to be able to edit and send with an option_  
+  _💡Tip for mobile users: Touch and hold on any of the commands to be able to edit and send with a sort option_  
   
-*  1. /aww
+  1. /aww
 
   2. /cats
   
@@ -420,23 +494,27 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
   
   32. /dataisbeautiful
   
-  33. /music*
+  33. /music
   `;
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.from.id, message, { parse });
   }
   //options
   else if (msg.text === "/options") {
-    const message = `*Options:*
+    const message = `*Sort Options:*
+
+You can customize the "sort" option with any of the following: 
 
 1. _(default)_ *hot* - Hot threads from past day 
 2. *top* - Top threads from past day
-3. *topw* - Top threads from past week
-4. *topm* - Top threads from past month
-5. *topy* - Top threads from past year
-6. *all* - Top threads of all time
-7. *new* - Latest threads
-8. _(newly added)_ *toph* - Top threads from past hour
+3. *toph* - Top threads from past hour
+4. *topw* - Top threads from past week
+5. *topm* - Top threads from past month
+6. *topy* - Top threads from past year
+7. *all* - Top threads of all time
+8. *new* - Latest threads
+
+For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
     `;
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.from.id, message, { parse });
