@@ -1,30 +1,37 @@
-# hello-express
+*Welcome to Reddgram Bot*
 
-A server that serves a webpage, its resources, and some data
+Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
+*How to use Reddgram:*
 
-## Your Project
+1. *Format:* 
+*subreddit_name  sort_option\*  
+            (or) 
+*\/subreddit_name  sort_option\*
 
-On the front-end,
+You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
 
-- Edit `views/index.html` to change the content of the webpage
-- `public/client.js` is the javacript that runs when you load the webpage
-- `public/style.css` is the styles for `views/index.html`
-- Drag in `assets`, like images or music, to add them to your project
+1. _(default)_ *hot* - Hot threads from past day 
+2. *top* - Top threads from past day
+3. *toph* - Top threads from past hour
+4. *topw* - Top threads from past week
+5. *topm* - Top threads from past month
+6. *topy* - Top threads from past year
+7. *all* - Top threads of all time
+8. *new* - Latest threads
 
-On the back-end,
+2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
 
-- your app starts at `server.js`
-- add frameworks and packages in `package.json`
-- safely store app secrets in `.env` (nobody can see this but you and people you invite)
+              \`aww top\` or \`\/aww top\` (long press to copy).
 
-Click `Show` in the header to see your app live. Updates to your code will instantly deploy.
+Default option is *hot*, so /aww will return hottest threads from the past day.
 
+3. You can also browse any *random* subreddit or *all* which returns all the hottest threads from all subreddits. To do that, just send /random or /all respectively.
 
-## Made by [Glitch](https://glitch.com/)
+4. Send /list for a list of most popular subreddits.
 
-**Glitch** is the friendly community where you'll build the app of your dreams. Glitch lets you instantly create, remix, edit, and host an app, bot or site, and you can invite collaborators or helpers to simultaneously edit code with you.
+5. Send /popular for most popular threads from all subreddits.
 
-Find out more [about Glitch](https://glitch.com/about).
+_💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 
-( ᵔ ᴥ ᵔ )
+Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k
