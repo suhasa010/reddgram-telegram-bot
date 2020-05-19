@@ -1,4 +1,5 @@
 <h1>Reddgram Telegram Bot</h1>
+Telegram:<a href="https://t.me/RedditBrowserBot">Reddgram Bot</a>
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
