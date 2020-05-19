@@ -1,37 +1,33 @@
-# Reddgram Telegram Bot
+##Welcome to Reddgram Bot
 
-A reddit browser inside telegram
+Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
-## Usage:
+##How to use Reddgram:
 
-Enter a subreddit name with an option:
+1. Format: 
+*subreddit_name  sort_option\*  
+            (or) 
+*\/subreddit_name  sort_option\*
 
-top: Top posts from past day
+You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
 
-topw: Top posts from past week
+1. _(default)_ *hot* - Hot threads from past day 
+2. *top* - Top threads from past day
+3. *toph* - Top threads from past hour
+4. *topw* - Top threads from past week
+5. *topm* - Top threads from past month
+6. *topy* - Top threads from past year
+7. *all* - Top threads of all time
+8. *new* - Latest threads
 
-topm: Top posts from past month
+2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
 
-topy: Top posts from past year
+              \`aww top\` or \`\/aww top\` (long press to copy).
 
-all: Top posts of all time
+Default option is *hot*, so /aww will return hottest threads from the past day.
 
-hot: Hot posts right now 
+3. You can also browse any *random* subreddit or *all* which returns all the hottest threads from all subreddits. To do that, just send /random or /all respectively.
 
-new: Latest posts
+4. Send /list for a list of most popular subreddits.
 
-For example if you want to get top posts of /r/cats enter:
-cats top
-
-Default option is top, so cats will return top posts of /r/cats from past day.
-
-
-## Made by [Glitch](https://glitch.com/)
-
-**Glitch** is the friendly community where you'll build the app of your dreams. Glitch lets you instantly create, remix, edit, and host an app, bot or site, and you can invite collaborators or helpers to simultaneously edit code with you.
-
-Find out more [about Glitch](https://glitch.com/about).
-
-( ᵔ ᴥ ᵔ )
-
-## Fork of @ReddBot by @thedevs
+5. Send /popular for most popular threads from all subreddits.
