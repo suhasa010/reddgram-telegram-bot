@@ -5,7 +5,7 @@ Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right
 <b>How to use Reddgram:</b>
 
 1. Format: 
-subreddit_name  sort_option\  
+subreddit_name  sort_option  
             (or) 
 /subreddit_name  sort_option
 
