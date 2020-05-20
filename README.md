@@ -1,14 +1,13 @@
-<h1>Reddgram Telegram Bot</h1>
-Check it out on Telegram: <a href="https://t.me/RedditBrowserBot">Reddgram Bot</a>
+*Welcome to Reddgram Bot*
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
-<b>How to use Reddgram:</b>
+*How to use Reddgram:*
 
-1. Format: 
-subreddit_name  sort_option  
+1. *Format:* 
+*subreddit_name  sort_option\*  
             (or) 
-/subreddit_name  sort_option
+*\/subreddit_name  sort_option\*
 
 You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
 
@@ -23,7 +22,7 @@ You can customize the "sort" option with any of the following(you can view this 
 
 2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
 
-            aww top or /aww top
+              \`aww top\` or \`\/aww top\` (long press to copy).
 
 Default option is *hot*, so /aww will return hottest threads from the past day.
 
@@ -33,6 +32,6 @@ Default option is *hot*, so /aww will return hottest threads from the past day.
 
 5. Send /popular for most popular threads from all subreddits.
 
-Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k
+_💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 
-Fork of <a href="https://github.com/poeti8/reddbot">@ReddBot</a>. Thanks for making this little project possible.
+Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k

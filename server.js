@@ -49,7 +49,8 @@ const bot = new TeleBot(process.env.BOT_TOKEN);
 var prettytime = require("prettytime");
 
 let db = {};
-let rLimit = 50;
+let rLimit = 30;
+var skips = 0; //keep track of no. of sticky threads skipped
 
 function updateUser(userId, subreddit, option, postNum) {
   db[userId] = { subreddit, option, postNum };
@@ -69,10 +70,23 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         } else if (body.data.children.length - 1 < postNum) {
           return noMorePosts(messageId);
         }
-
-        // reddit post data
-        let redditPost = body.data.children[postNum].data;
+        logger.info(postNum)
+        
+        // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
+        var redditPost = body.data.children[postNum+skips].data;
+        
+        //ignore stickied/pinned posts
+        for(postNum = skips; redditPost.stickied === true; postNum++) {
+            redditPost = body.data.children[postNum+1].data;
+          skips = skips + 1
+          logger.info(postNum)
+        }
+        
+        //if(redditPost.stickied === true)
+          //bot.click()
         redditPost.title = redditPost.title.replace(/&amp;/g, "&");
+        
+                  
         // inline buttons
         const markup = bot.inlineKeyboard([
           [
@@ -163,7 +177,7 @@ function getOptions(option, rlimit) {
 const parse = "HTML";
 
 function sendErrorMsg(messageId) {
-  const errorMsg = `_ERROR: Couldn't find the subreddit. Use /help for instructions._`;
+  const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
 }
@@ -182,7 +196,7 @@ function selfTextLimitExceeded(messageId) {
 }
 
 function noMorePosts(messageId) {
-  const errorMsg = `_ERROR: No more threads. Use /help for instructions_`;
+  const errorMsg = `<i>ERROR: No more threads. Use /help for instructions</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
 }
@@ -280,7 +294,7 @@ function sendGifPost(messageId, redditPost, markup) {
 
   timeago = timeago.replace(/\s/g, "");
   const caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ *<b>{points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: gif thread");
   return bot.sendVideo(messageId, gif, { parse, caption, markup });
@@ -333,16 +347,15 @@ function sendMessagePost(messageId, redditPost, markup) {
   } catch (err) {
     return sendErrorMsg(messageId);
   }
-
   var upvote_ratio = redditPost.upvote_ratio * 100;
 
   if (redditPost.selftext.length > 3700) {
     if (redditPost.score > 1000)
       var points = (redditPost.score / 1000).toFixed(1) + "k";
     else var points = redditPost.score;
-    const preview = redditPost.selftext.slice(0, 1000);
+    const preview = redditPost.selftext.slice(0, 3700);
     const message =
-      `🔖 *${redditPost.title}*\n\n📝` +
+      `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
       selfTextLimitExceeded(messageId) +
       `\n\n⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
@@ -382,6 +395,7 @@ bot.on("text", msg => {
     msg.text === "/help@RedditBrowserBot" ||
     msg.text === "/start@RedditBrowserBot"
   ) {
+    skips = 0
     const message = `*Welcome to Reddgram Bot*
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
@@ -419,12 +433,13 @@ Default option is *hot*, so /aww will return hottest threads from the past day.
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 
 Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
-    logger.info("User: " + msg.text);
+    logger.info("User("+msg.from.username+"): " + msg.text);
     return bot.sendMessage(msg.from.id, message, { parse });
   }
 
   //list of popular subreddits
   else if (msg.text === "/list") {
+    skips = 0
     const message = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
   (and of course you can customize the "sort" option with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
   
@@ -495,12 +510,18 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
   32. /dataisbeautiful
   
   33. /music
-  `;
+  
+  34. /nosleep
+
+  35. /apple
+
+`;
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.from.id, message, { parse });
   }
   //options
   else if (msg.text === "/options") {
+    skips = 0
     const message = `*Sort Options:*
 
 You can customize the "sort" option with any of the following: 
@@ -521,7 +542,8 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
   }
   //core logic
   else {
-    logger.info("User: " + msg.text);
+    skips = 0 
+    logger.info("User("+msg.from.username+"): " + msg.text);
 
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
@@ -534,6 +556,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
     sendRedditPost(messageId, subreddit, option, postNum);
   }
 });
+
 
 bot.on("callbackQuery", msg => {
   if (msg.data === "callback_query_next") {
@@ -570,6 +593,7 @@ bot.on("callbackQuery", msg => {
     if (postNum > rLimit - 1) {
       return sendLimitMsg(messageId);
     }
+    logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
   }
 });
