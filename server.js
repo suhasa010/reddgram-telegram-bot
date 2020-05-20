@@ -163,7 +163,7 @@ function getOptions(option, rlimit) {
 const parse = "HTML";
 
 function sendErrorMsg(messageId) {
-  const errorMsg = `_ERROR: Couldn't find the subreddit. Use /help for instructions._`;
+  const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
 }
@@ -182,7 +182,7 @@ function selfTextLimitExceeded(messageId) {
 }
 
 function noMorePosts(messageId) {
-  const errorMsg = `_ERROR: No more threads. Use /help for instructions_`;
+  const errorMsg = `<i>ERROR: No more threads. Use /help for instructions</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
 }
@@ -280,7 +280,7 @@ function sendGifPost(messageId, redditPost, markup) {
 
   timeago = timeago.replace(/\s/g, "");
   const caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ *<b>{points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
+⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: gif thread");
   return bot.sendVideo(messageId, gif, { parse, caption, markup });
@@ -342,7 +342,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     else var points = redditPost.score;
     const preview = redditPost.selftext.slice(0, 1000);
     const message =
-      `🔖 *${redditPost.title}*\n\n📝` +
+      `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
       selfTextLimitExceeded(messageId) +
       `\n\n⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
