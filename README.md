@@ -1,4 +1,5 @@
-*Welcome to Reddgram Bot*
+<h1>Reddgram Telegram Bot</h1>
+Check it out on Telegram: <a href="https://t.me/RedditBrowserBot">Reddgram Bot</a>
 
 Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
 
@@ -32,6 +33,6 @@ Default option is *hot*, so /aww will return hottest threads from the past day.
 
 5. Send /popular for most popular threads from all subreddits.
 
-_💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
-
 Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k
+
+Fork of <a href="https://github.com/poeti8/reddbot">@ReddBot</a>. Thanks for making this little project possible.
