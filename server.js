@@ -49,7 +49,7 @@ const bot = new TeleBot(process.env.BOT_TOKEN);
 var prettytime = require("prettytime");
 
 let db = {};
-let rLimit = 30;
+let rLimit = 100;
 var skips = 0; //keep track of no. of sticky threads skipped
 
 function updateUser(userId, subreddit, option, postNum) {
@@ -70,7 +70,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         } else if (body.data.children.length - 1 < postNum) {
           return noMorePosts(messageId);
         }
-        logger.info(postNum)
+        //logger.info(postNum)
         
         // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
         var redditPost = body.data.children[postNum+skips].data;
@@ -79,7 +79,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         for(postNum = skips; redditPost.stickied === true; postNum++) {
             redditPost = body.data.children[postNum+1].data;
           skips = skips + 1
-          logger.info(postNum)
+          //logger.info(postNum)
         }
         
         //if(redditPost.stickied === true)
@@ -403,36 +403,26 @@ Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right
 *How to use Reddgram:*
 
 1. *Format:* 
-*subreddit_name  sort_option\*  
-            (or) 
-*\/subreddit_name  sort_option\*
+          *subreddit_name  sort_option\*  
+                      (or) 
+          *\/subreddit_name  sort_option\*
 
-You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
+a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
 
-1. _(default)_ *hot* - Hot threads from past day 
-2. *top* - Top threads from past day
-3. *toph* - Top threads from past hour
-4. *topw* - Top threads from past week
-5. *topm* - Top threads from past month
-6. *topy* - Top threads from past year
-7. *all* - Top threads of all time
-8. *new* - Latest threads
+b. *sort_option* can be any of the these /options. 
 
-2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
+For eg. \`aww top\` or \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
-              \`aww top\` or \`\/aww top\` (long press to copy).
+Note: Default option is *hot*, so /aww will return hottest threads from the past day.
 
-Default option is *hot*, so /aww will return hottest threads from the past day.
+2. /random - random threads from all subreddits
 
-3. You can also browse any *random* subreddit or *all* which returns all the hottest threads from all subreddits. To do that, just send /random or /all respectively.
+    /all - all hottest trending threads 
 
-4. Send /list for a list of most popular subreddits.
-
-5. Send /popular for most popular threads from all subreddits.
+    /popular - most popular threads from all subreddits.
 
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
-
-Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
+`;
     logger.info("User("+msg.from.username+"): " + msg.text);
     return bot.sendMessage(msg.from.id, message, { parse });
   }
@@ -524,7 +514,7 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
     skips = 0
     const message = `*Sort Options:*
 
-You can customize the "sort" option with any of the following: 
+You can customize the *sort_option* with any of the following: 
 
 1. _(default)_ *hot* - Hot threads from past day 
 2. *top* - Top threads from past day
@@ -593,7 +583,7 @@ bot.on("callbackQuery", msg => {
     if (postNum > rLimit - 1) {
       return sendLimitMsg(messageId);
     }
-    logger.info("after clicking next:"+postNum)
+    //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
   }
 });
