@@ -71,15 +71,16 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           return noMorePosts(messageId);
         }
         //logger.info(postNum)
-         if (body.data.children[0].data.subreddit_type === "restricted")
-              return Restricted(messageId);
+         //if (body.data.children[0].data.subreddit_type === "restricted")
+              //return Restricted(messageId);
         
         // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
         var redditPost = body.data.children[postNum+skips].data;
         
         //ignore stickied/pinned posts
         for(postNum = skips; redditPost.stickied === true; postNum++) {
-            redditPost = body.data.children[postNum+1].data;
+          try{redditPost = body.data.children[postNum+1].data}
+          catch(err) { return noMorePosts(messageId)}
           skips = skips + 1
           //logger.info(postNum)
         }
@@ -179,7 +180,7 @@ function getOptions(option, rlimit) {
 const parse = "HTML";
 
 function Restricted(messageId) {
-  const errorMsg = `<i>ERROR: Access to this subreddit is restricted.</i>`;
+  const errorMsg = `<i>ERROR: This subreddit is restricted.</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
   
