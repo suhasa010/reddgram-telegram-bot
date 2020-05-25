@@ -49,7 +49,7 @@ const bot = new TeleBot(process.env.BOT_TOKEN);
 var prettytime = require("prettytime");
 
 let db = {};
-let rLimit = 30;
+let rLimit = 100;
 var skips = 0; //keep track of no. of sticky threads skipped
 
 function updateUser(userId, subreddit, option, postNum) {
@@ -70,7 +70,9 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         } else if (body.data.children.length - 1 < postNum) {
           return noMorePosts(messageId);
         }
-        logger.info(postNum)
+        //logger.info(postNum)
+         if (body.data.children[0].data.subreddit_type === "restricted")
+              return Restricted(messageId);
         
         // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
         var redditPost = body.data.children[postNum+skips].data;
@@ -79,7 +81,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         for(postNum = skips; redditPost.stickied === true; postNum++) {
             redditPost = body.data.children[postNum+1].data;
           skips = skips + 1
-          logger.info(postNum)
+          //logger.info(postNum)
         }
         
         //if(redditPost.stickied === true)
@@ -176,6 +178,13 @@ function getOptions(option, rlimit) {
 //parse_mode option for bot.sendMessage()
 const parse = "HTML";
 
+function Restricted(messageId) {
+  const errorMsg = `<i>ERROR: Access to this subreddit is restricted.</i>`;
+  logger.error(errorMsg);
+  return bot.sendMessage(messageId, errorMsg, { parse });
+  
+}
+
 function sendErrorMsg(messageId) {
   const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
   logger.error(errorMsg);
@@ -228,13 +237,17 @@ function sendImagePost(messageId, redditPost, markup) {
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
-  var upvote_ratio = redditPost.upvote_ratio * 100;
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
-  const caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+  var caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
 ⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
 
   logger.info("Request completed: image/gif thread");
+  //nsfw indicator
+  if(redditPost.over_18 === true)
+     caption = "🔞" + caption
+
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
   return bot.sendMessage(messageId, caption, { parse, markup });
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
@@ -259,8 +272,8 @@ function sendLinkPost(messageId, redditPost, markup) {
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
-  var upvote_ratio = redditPost.upvote_ratio * 100;
-  const message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
+  var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
     websitename[0]
   })</b>\n
 ⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${
@@ -271,6 +284,9 @@ function sendLinkPost(messageId, redditPost, markup) {
   }`;
   //<a href="${url}">[Link]</a>
   logger.info("Request completed: link thread");
+  //nsfw indicator
+  if(redditPost.over_18 === true)
+     message = "🔞" +message
   return bot.sendMessage(messageId, message, { parse, markup });
 }
 
@@ -290,13 +306,16 @@ function sendGifPost(messageId, redditPost, markup) {
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
-  var upvote_ratio = redditPost.upvote_ratio * 100;
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
   timeago = timeago.replace(/\s/g, "");
-  const caption = `🔖 <b>${redditPost.title}</b>\n
+  var caption = `🔖 <b>${redditPost.title}</b>\n
 ⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: gif thread");
+  //nsfw indicator
+  if(redditPost.over_18 === true)
+     caption = "🔞" + caption
   return bot.sendVideo(messageId, gif, { parse, caption, markup });
 }
 
@@ -321,12 +340,16 @@ function sendVideoPost(messageId, redditPost, markup) {
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
-  var upvote_ratio = redditPost.upvote_ratio * 100;
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
-  const message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+  var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
 ⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: video/gif thread");
+  //nsfw indicator
+  if(redditPost.over_18 === true)
+     message = "🔞" + message
+
   return bot.sendMessage(messageId, message, { parse, markup });
 }
 
@@ -347,20 +370,24 @@ function sendMessagePost(messageId, redditPost, markup) {
   } catch (err) {
     return sendErrorMsg(messageId);
   }
-  var upvote_ratio = redditPost.upvote_ratio * 100;
-
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
+  //if selftext exceeds limit
   if (redditPost.selftext.length > 3700) {
     if (redditPost.score > 1000)
       var points = (redditPost.score / 1000).toFixed(1) + "k";
     else var points = redditPost.score;
     const preview = redditPost.selftext.slice(0, 3700);
-    const message =
+    var message =
       `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
       selfTextLimitExceeded(messageId) +
       `\n\n⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
     logger.info("Request completed: long text thread");
+    //nsfw indicator
+    if(redditPost.over_18 === true)
+       message = "🔞" + message
+    logger.info("Request completed: text thread");
     return bot.sendMessage(messageId, message, { parse, markup });
   }
 
@@ -368,12 +395,15 @@ function sendMessagePost(messageId, redditPost, markup) {
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
-  const message = `🔖 <b>${redditPost.title}</b>\n
+  var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n
 ⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   //\n\n${url}
-
+  
+  //nsfw indicator
+  if(redditPost.over_18 === true)
+     message = "🔞" + message
   logger.info("Request completed: text thread");
 
   return bot.sendMessage(messageId, message, { parse, markup });
@@ -398,41 +428,31 @@ bot.on("text", msg => {
     skips = 0
     const message = `*Welcome to Reddgram Bot*
 
-Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
+Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
 *How to use Reddgram:*
 
 1. *Format:* 
-*subreddit_name  sort_option\*  
-            (or) 
-*\/subreddit_name  sort_option\*
+          *subreddit_name  sort_option\*  
+                      (or) 
+          *\/subreddit_name  sort_option\*
 
-You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
+a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
 
-1. _(default)_ *hot* - Hot threads from past day 
-2. *top* - Top threads from past day
-3. *toph* - Top threads from past hour
-4. *topw* - Top threads from past week
-5. *topm* - Top threads from past month
-6. *topy* - Top threads from past year
-7. *all* - Top threads of all time
-8. *new* - Latest threads
+b. *sort_option* can be any of the these /options. 
 
-2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
+For eg. \`aww top\` or \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
-              \`aww top\` or \`\/aww top\` (long press to copy).
+Note: Default option is *hot*, so /aww will return hottest threads from the past day.
 
-Default option is *hot*, so /aww will return hottest threads from the past day.
+2. /random - random threads from all subreddits
 
-3. You can also browse any *random* subreddit or *all* which returns all the hottest threads from all subreddits. To do that, just send /random or /all respectively.
+    /all - all hot threads from all subreddits
 
-4. Send /list for a list of most popular subreddits.
-
-5. Send /popular for most popular threads from all subreddits.
+    /popular - most popular threads from all subreddits.
 
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
-
-Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
+`;
     logger.info("User("+msg.from.username+"): " + msg.text);
     return bot.sendMessage(msg.from.id, message, { parse });
   }
@@ -463,13 +483,13 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
   
   9. /todayilearned
   
-  10. /random
+  10. /dogs
   
   11. /memes
   
   12. /science
   
-  13. /technology
+  13. /youshouldknow
   
   14. /books
   
@@ -509,11 +529,11 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
   
   32. /dataisbeautiful
   
-  33. /music
+  33. /food
   
   34. /nosleep
 
-  35. /apple
+  35. /woahdude
 
 `;
     logger.info("User: " + msg.text);
@@ -524,7 +544,7 @@ Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k`;
     skips = 0
     const message = `*Sort Options:*
 
-You can customize the "sort" option with any of the following: 
+You can customize the *sort_option* with any of the following: 
 
 1. _(default)_ *hot* - Hot threads from past day 
 2. *top* - Top threads from past day
@@ -593,7 +613,7 @@ bot.on("callbackQuery", msg => {
     if (postNum > rLimit - 1) {
       return sendLimitMsg(messageId);
     }
-    logger.info("after clicking next:"+postNum)
+    //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
   }
 });
