@@ -1,7 +1,18 @@
 //Don't sleep
 const http = require("http");
 const express = require("express");
+
+const logRoutes = require('./routes/log.routes');
+const initDB = require('./db');
+const Log = require('./models/Log');
 const app = express();
+
+initDB();
+
+// console.log(logRoutes);
+
+app.use(logRoutes);
+
 app.get("/", (request, response) => {
   console.log(Date.now() + " Ping Received");
   response.sendStatus(200);
@@ -10,6 +21,22 @@ app.listen(process.env.PORT);
 setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
 }, 290000);
+
+
+/*const MongoClient = require('mongodb').MongoClient;
+const uri = "mongodb+srv://db-user01:8fEehuKBBtHklKXC@cluster0-mhe7d.azure.mongodb.net/test?retryWrites=true&w=majority";
+const client = new MongoClient(uri, { useNewUrlParser: true });
+client.connect(err => {
+  const collection = client.db("test").collection("devices");
+  // perform actions on the collection object
+  collection.collection("devices").insertOne({name:"suhasa"}, function(err, res) {
+    if (err) throw err;
+    console.log("1 document inserted");
+    db.close();
+  });
+  client.close();
+});
+*/
 
 //var logger = require('logger').createLogger(); // logs to STDOUT
 var logger = require("logger").createLogger("development.log"); // logs to a file
@@ -179,12 +206,12 @@ function getOptions(option, rlimit) {
 //parse_mode option for bot.sendMessage()
 const parse = "HTML";
 
-function Restricted(messageId) {
+/*function Restricted(messageId) {
   const errorMsg = `<i>ERROR: This subreddit is restricted.</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
   
-}
+}*/
 
 function sendErrorMsg(messageId) {
   const errorMsg = `<i>ERROR: Couldn't find the subreddit. Use /help for instructions.</i>`;
@@ -200,7 +227,7 @@ Use /help for instructions._`;
 }
 
 function selfTextLimitExceeded(messageId) {
-  const errorMsg = `......\n\n<i>ERROR: Sorry, The content of this post has exceeded the limit. Please click on Comments button to view the full thread or Next button to try and load the next post....</i>`;
+  const errorMsg = `......\n\n<i>ERROR: Sorry, The content of this thread has exceeded the limit. Please click on Comments button to view the full thread or Next button to try and load the next thread....</i>`;
   logger.error(errorMsg);
   return errorMsg;
 }
@@ -355,6 +382,21 @@ function sendVideoPost(messageId, redditPost, markup) {
 }
 
 function sendMessagePost(messageId, redditPost, markup) {
+  
+  
+  // REMOVE THIS CODE 
+  // Create Log when a message post is created
+  
+  /*Log.create({
+    subreddit: 'jokes', // hardcoded, change it to acutal subreddit name
+    type: 'TEXT', // type of the post
+    chatId: 'randomId' // hardcoded
+  }).then(doc => {
+    console.log('log created', doc);
+  })
+  */
+  
+  //
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
   //let boldtitle = redditPost.title
@@ -455,14 +497,14 @@ Note: Default option is *hot*, so /aww will return hottest threads from the past
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 `;
     logger.info("User("+msg.from.username+"): " + msg.text);
-    return bot.sendMessage(msg.from.id, message, { parse });
+    return bot.sendMessage(msg.chat.id, message, { parse });
   }
 
   //list of popular subreddits
-  else if (msg.text === "/list") {
+  else if (msg.text === "/list" || msg.text === "/list@RedditBrowserBot") {
     skips = 0
     const message = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
-  (and of course you can customize the "sort" option with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
+  (and of course you can customize the *sort_option* with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
   
   _💡Tip for mobile users: Touch and hold on any of the commands to be able to edit and send with a sort option_  
   
@@ -538,7 +580,7 @@ _💡Tip for mobile users: Touch and hold on any of the above commands to be abl
 
 `;
     logger.info("User: " + msg.text);
-    return bot.sendMessage(msg.from.id, message, { parse });
+    return bot.sendMessage(msg.chat.id, message, { parse });
   }
   //options
   else if (msg.text === "/options") {
@@ -559,7 +601,7 @@ You can customize the *sort_option* with any of the following:
 For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
     `;
     logger.info("User: " + msg.text);
-    return bot.sendMessage(msg.from.id, message, { parse });
+    return bot.sendMessage(msg.chat.id, message, { parse });
   }
   //core logic
   else {
@@ -570,7 +612,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       msg.text = msg.text.slice(1, msg.text.length);
     }
     const userId = `id_${msg.from.id}`;
-    const messageId = msg.from.id;
+    const messageId = msg.chat.id;
     const [subreddit, option] = msg.text.toLowerCase().split(" ");
     const postNum = 0;
     updateUser(userId, subreddit, option, postNum);
@@ -581,8 +623,10 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
 
 bot.on("callbackQuery", msg => {
   if (msg.data === "callback_query_next") {
+    //console.log("test")
     const userId = `id_${msg.from.id}`;
-    const messageId = msg.from.id;
+    const messageId = msg.message.chat.id;
+    //console.log(msg.message.chat.id)
     logger.info("User: clicked next");
     let subreddit = "",
       option = "";
