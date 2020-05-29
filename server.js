@@ -2,9 +2,9 @@
 const http = require("http");
 const express = require("express");
 
-const logRoutes = require('./routes/log.routes');
-const initDB = require('./db');
-const Log = require('./models/Log');
+const logRoutes = require("./routes/log.routes");
+const initDB = require("./db");
+const Log = require("./models/Log");
 const app = express();
 
 initDB();
@@ -21,7 +21,6 @@ app.listen(process.env.PORT);
 setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
 }, 290000);
-
 
 /*const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://db-user01:8fEehuKBBtHklKXC@cluster0-mhe7d.azure.mongodb.net/test?retryWrites=true&w=majority";
@@ -98,25 +97,27 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           return noMorePosts(messageId);
         }
         //logger.info(postNum)
-         //if (body.data.children[0].data.subreddit_type === "restricted")
-              //return Restricted(messageId);
-        
+        //if (body.data.children[0].data.subreddit_type === "restricted")
+        //return Restricted(messageId);
+
         // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
-        var redditPost = body.data.children[postNum+skips].data;
-        
+        var redditPost = body.data.children[postNum + skips].data;
+
         //ignore stickied/pinned posts
-        for(postNum = skips; redditPost.stickied === true; postNum++) {
-          try{redditPost = body.data.children[postNum+1].data}
-          catch(err) { return noMorePosts(messageId)}
-          skips = skips + 1
+        for (postNum = skips; redditPost.stickied === true; postNum++) {
+          try {
+            redditPost = body.data.children[postNum + 1].data;
+          } catch (err) {
+            return noMorePosts(messageId);
+          }
+          skips = skips + 1;
           //logger.info(postNum)
         }
-        
+
         //if(redditPost.stickied === true)
-          //bot.click()
+        //bot.click()
         redditPost.title = redditPost.title.replace(/&amp;/g, "&");
-        
-                  
+
         // inline buttons
         const markup = bot.inlineKeyboard([
           [
@@ -273,8 +274,7 @@ function sendImagePost(messageId, redditPost, markup) {
 
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
-  if(redditPost.over_18 === true)
-     caption = "🔞" + caption
+  if (redditPost.over_18 === true) caption = "🔞" + caption;
 
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
   return bot.sendMessage(messageId, caption, { parse, markup });
@@ -313,8 +313,7 @@ function sendLinkPost(messageId, redditPost, markup) {
   //<a href="${url}">[Link]</a>
   logger.info("Request completed: link thread");
   //nsfw indicator
-  if(redditPost.over_18 === true)
-     message = "🔞" +message
+  if (redditPost.over_18 === true) message = "🔞" + message;
   return bot.sendMessage(messageId, message, { parse, markup });
 }
 
@@ -342,8 +341,7 @@ function sendGifPost(messageId, redditPost, markup) {
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: gif thread");
   //nsfw indicator
-  if(redditPost.over_18 === true)
-     caption = "🔞" + caption
+  if (redditPost.over_18 === true) caption = "🔞" + caption;
   return bot.sendVideo(messageId, gif, { parse, caption, markup });
 }
 
@@ -375,18 +373,15 @@ function sendVideoPost(messageId, redditPost, markup) {
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   logger.info("Request completed: video/gif thread");
   //nsfw indicator
-  if(redditPost.over_18 === true)
-     message = "🔞" + message
+  if (redditPost.over_18 === true) message = "🔞" + message;
 
   return bot.sendMessage(messageId, message, { parse, markup });
 }
 
 function sendMessagePost(messageId, redditPost, markup) {
-  
-  
-  // REMOVE THIS CODE 
+  // REMOVE THIS CODE
   // Create Log when a message post is created
-  
+
   /*Log.create({
     subreddit: 'jokes', // hardcoded, change it to acutal subreddit name
     type: 'TEXT', // type of the post
@@ -395,7 +390,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     console.log('log created', doc);
   })
   */
-  
+
   //
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
@@ -419,7 +414,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     if (redditPost.score > 1000)
       var points = (redditPost.score / 1000).toFixed(1) + "k";
     else var points = redditPost.score;
-    const preview = redditPost.selftext.slice(0, 3700);
+    const preview = redditPost.selftext.slice(0, 3500);
     var message =
       `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
@@ -428,8 +423,7 @@ function sendMessagePost(messageId, redditPost, markup) {
 ✏️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
     logger.info("Request completed: long text thread");
     //nsfw indicator
-    if(redditPost.over_18 === true)
-       message = "🔞" + message
+    if (redditPost.over_18 === true) message = "🔞" + message;
     logger.info("Request completed: text thread");
     return bot.sendMessage(messageId, message, { parse, markup });
   }
@@ -443,10 +437,9 @@ function sendMessagePost(messageId, redditPost, markup) {
 ⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
 ✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
   //\n\n${url}
-  
+
   //nsfw indicator
-  if(redditPost.over_18 === true)
-     message = "🔞" + message
+  if (redditPost.over_18 === true) message = "🔞" + message;
   logger.info("Request completed: text thread");
 
   return bot.sendMessage(messageId, message, { parse, markup });
@@ -468,7 +461,7 @@ bot.on("text", msg => {
     msg.text === "/help@RedditBrowserBot" ||
     msg.text === "/start@RedditBrowserBot"
   ) {
-    skips = 0
+    skips = 0;
     const message = `*Welcome to Reddgram Bot*
 
 Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
@@ -496,13 +489,13 @@ Note: Default option is *hot*, so /aww will return hottest threads from the past
 
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 `;
-    logger.info("User("+msg.from.username+"): " + msg.text);
+    logger.info("User(" + msg.from.username + "): " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
 
   //list of popular subreddits
   else if (msg.text === "/list" || msg.text === "/list@RedditBrowserBot") {
-    skips = 0
+    skips = 0;
     const message = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
   (and of course you can customize the *sort_option* with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
   
@@ -583,8 +576,11 @@ _💡Tip for mobile users: Touch and hold on any of the above commands to be abl
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
   //options
-  else if (msg.text === "/options") {
-    skips = 0
+  else if (
+    msg.text === "/options" ||
+    msg.text === "/options@RedditBrowserBot"
+  ) {
+    skips = 0;
     const message = `*Sort Options:*
 
 You can customize the *sort_option* with any of the following: 
@@ -605,26 +601,44 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
   }
   //core logic
   else {
-    skips = 0 
-    logger.info("User("+msg.from.username+"): " + msg.text);
+    //for groups
+    if (msg.text.includes("@RedditBrowserBot")) {
+      if (msg.text.includes("/")) {
+        msg.text = msg.text.slice(1, msg.text.length);
+      }
+      var [subreddit, option] = msg.text.toLowerCase().split("@");
+      var [mention, option1] = option.toLowerCase().split(" ");
+      var option = option1;
+      skips = 0;
+      logger.info("User(" + msg.from.username + "): " + msg.text);
 
-    if (msg.text.includes("/")) {
-      msg.text = msg.text.slice(1, msg.text.length);
+      const userId = `id_${msg.chat.id}`;
+      const messageId = msg.chat.id;
+      //const [subreddit, option] = msg.text.toLowerCase().split(" ");
+      const postNum = 0;
+      updateUser(userId, subreddit, option, postNum);
+      sendRedditPost(messageId, subreddit, option, postNum);
+    } else { //for PMs
+      skips = 0;
+      logger.info("User(" + msg.from.username + "): " + msg.text);
+
+      if (msg.text.includes("/")) {
+        msg.text = msg.text.slice(1, msg.text.length);
+      }
+      const userId = `id_${msg.chat.id}`;
+      const messageId = msg.chat.id;
+      const [subreddit, option] = msg.text.toLowerCase().split(" ");
+      const postNum = 0;
+      updateUser(userId, subreddit, option, postNum);
+      sendRedditPost(messageId, subreddit, option, postNum);
     }
-    const userId = `id_${msg.from.id}`;
-    const messageId = msg.chat.id;
-    const [subreddit, option] = msg.text.toLowerCase().split(" ");
-    const postNum = 0;
-    updateUser(userId, subreddit, option, postNum);
-    sendRedditPost(messageId, subreddit, option, postNum);
   }
 });
-
 
 bot.on("callbackQuery", msg => {
   if (msg.data === "callback_query_next") {
     //console.log("test")
-    const userId = `id_${msg.from.id}`;
+    const userId = `id_${msg.message.chat.id}`;
     const messageId = msg.message.chat.id;
     //console.log(msg.message.chat.id)
     logger.info("User: clicked next");
