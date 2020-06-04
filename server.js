@@ -20,7 +20,7 @@ app.get("/", (request, response) => {
 app.listen(process.env.PORT);
 setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
-}, 290000);
+}, 240000);
 
 /*const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://db-user01:8fEehuKBBtHklKXC@cluster0-mhe7d.azure.mongodb.net/test?retryWrites=true&w=majority";
@@ -454,13 +454,72 @@ function sendMessagePost(messageId, redditPost, markup) {
 
 bot.on("text", msg => {
   const parse = "Markdown";
-  //start/help menu
+  //funny emoji
+  if(msg.text === "😂" || 
+     msg.text ==="😀" || 
+     msg.text ==="😃" || 
+     msg.text ==="😄" || 
+     msg.text ==="😁" || 
+     msg.text ==="😆" || 
+     msg.text ==="😅" || 
+     msg.text ==="🤣")
+    msg.text = "/memes+jokes+funny"
+  
+  if(msg.text === "🧐")
+    msg.texxt = "/pics+gifs+videos"
+  if(msg.text === "🚿")
+    msg.text = "/showerthoughts"
+  if(msg.text === "😍")
+    msg.text = "/aww"
+  if(msg.text === "🐈")
+    msg.text = "/cats"
+  if(msg.text === "🦮")
+    msg.text = "/dogs"
+  if(msg.text === "🎬")
+    msg.text = "/movies+television"
+  if(msg.text === "🦠")
+    msg.text = "/coronavirus"
+  if(msg.text === "🤔")
+    msg.text = "/todayilearned+youshouldknow"
+  if(msg.text === "😳" || 
+    msg.text === "😱" || 
+    msg.text === "😨" || 
+    msg.text === "😰" ||
+    msg.text === "🤯")
+    msg.text = "/interestingasfuck+mildlyinteresting+woahdude"
+  if(msg.text === "👌" || 
+    msg.text === "👌🏻" || 
+    msg.text === "👌🏼" || 
+    msg.text === "👌🏽" || 
+    msg.text === "👌🏾" || 
+    msg.text === "👌🏿")
+    msg.text = "/internetisbeautiful+dataisbeautiful"    
+  if(msg.text === "😋" ||
+    msg.text ==="🤤")
+    msg.text = "/food+foodporn"    
+  if(msg.text === "🥱" ||
+    msg.text === "😴")
+    msg.text = "/nosleep"
+  if(msg.text === "😎")
+    msg.text = "/random"
+  if(msg.text === "🇮🇳")
+    msg.text ==="/india"
+  
+  //middle finger emoji
+  if(msg.text === "🖕" || 
+     msg.text === "🖕🏻" || 
+     msg.text === "🖕🏼" || 
+     msg.text === "🖕🏽" || 
+     msg.text === "🖕🏾" || 
+     msg.text === "🖕🏿")
+    msg.text = "/nsfw+gonewild+nsfw_gifs"  
+  
+    //start/help menu
   if (
     msg.text === "/start" ||
-    msg.text === "/help" ||
-    msg.text === "/help@RedditBrowserBot" ||
-    msg.text === "/start@RedditBrowserBot"
-  ) {
+    msg.text === "/help" || 
+    msg.text === "/help@RedditBrowserBot" || 
+    msg.text ==="/start@RedditBrowserBot") {
     skips = 0;
     const message = `*Welcome to Reddgram Bot*
 
