@@ -466,7 +466,7 @@ bot.on("text", msg => {
     msg.text = "/memes+jokes+funny"
   
   if(msg.text === "🧐")
-    msg.texxt = "/pics+gifs+videos"
+    msg.text = "/pics+gifs+videos"
   if(msg.text === "🚿")
     msg.text = "/showerthoughts"
   if(msg.text === "😍")
@@ -503,7 +503,7 @@ bot.on("text", msg => {
   if(msg.text === "😎")
     msg.text = "/random"
   if(msg.text === "🇮🇳")
-    msg.text ==="/india"
+    msg.text = "/india"
   
   //middle finger emoji
   if(msg.text === "🖕" || 
@@ -511,7 +511,8 @@ bot.on("text", msg => {
      msg.text === "🖕🏼" || 
      msg.text === "🖕🏽" || 
      msg.text === "🖕🏾" || 
-     msg.text === "🖕🏿")
+     msg.text === "🖕🏿" ||
+     msg.text === "🍑")
     msg.text = "/nsfw+gonewild+nsfw_gifs"  
   
     //start/help menu
@@ -524,6 +525,10 @@ bot.on("text", msg => {
     const message = `*Welcome to Reddgram Bot*
 
 Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
+
+_New additions:_ 
+*EMOJI MODE* -- /emoji _A new way to browse subreddits_.
+*Multireddit* -- Now combine multiple subreddits and create your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
 
 *How to use Reddgram:*
 
@@ -540,7 +545,9 @@ For eg. \`aww top\` or \`\/aww top\` (long press to copy) to get top threads of 
 
 Note: Default option is *hot*, so /aww will return hottest threads from the past day.
 
-2. /random - random threads from all subreddits
+2. _NEW_ -- 
+
+3. /random - random threads from all subreddits
 
     /all - all hot threads from all subreddits
 
@@ -634,6 +641,52 @@ _💡Tip for mobile users: Touch and hold on any of the above commands to be abl
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
+  //emoji mode
+  else if (
+    msg.text === "/emoji" ||
+    msg.text === "/emoji@RedditBrowserBot"
+  ) {
+    skips = 0;
+    const message = `Welcome to a whole new way to browse Reddit: *Emoji Mode* is here.
+Send any of these emojis to browse the corresponding subreddit(s).
+
+😂😀😃😄😁😆😅🤣 - memes+jokes+funny  
+
+🧐 - pics+gifs+videos
+
+🚿 - showerthoughts
+
+😍 - aww
+
+🐈 - cats
+
+🦮 - dogs
+
+🎬 - movies+television
+
+🦠 - coronavirus
+
+🤔 - todayilearned+youshouldknow
+
+😳😱😨😰🤯 - interestingasfuck+mildlyinteresting+woahdude
+
+🇮🇳 - india
+
+👌 - internetisbeautiful+dataisbeautiful
+
+😋🤤 - food+foodporn
+
+🥱😴 - nosleep
+
+😎 - random
+
+🖕🍑 - nsfw+gonewild+nsfwgifs
+
+...and many more coming soon`;
+    logger.info("User: " + msg.text);
+    return bot.sendMessage(msg.chat.id, message, { parse });
+  }
+    
   //options
   else if (
     msg.text === "/options" ||
