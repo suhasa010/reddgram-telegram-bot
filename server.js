@@ -454,7 +454,7 @@ function sendMessagePost(messageId, redditPost, markup) {
 
 bot.on("text", msg => {
   const parse = "Markdown";
-  //funny emoji
+  //emoji mode
   if(msg.text === "😂" || 
      msg.text ==="😀" || 
      msg.text ==="😃" || 
@@ -463,40 +463,36 @@ bot.on("text", msg => {
      msg.text ==="😆" || 
      msg.text ==="😅" || 
      msg.text ==="🤣")
-    msg.text = "/memes+jokes+funny"
+    msg.text = "/memes+jokes+funny+humor+programmerhumor+dadjokes+punny"
   
-  if(msg.text === "🧐")
-    msg.text = "/pics+gifs+videos"
+  if(msg.text === "🧐" ||
+    msg.text === "👀")
+    msg.text = "/pics+gifs+videos+educationalgifs+wholesomegifs+reactiongifs+perfectloops+photoshopbattles+historyporn+spaceporn+comics"
   if(msg.text === "🚿")
     msg.text = "/showerthoughts"
   if(msg.text === "😍")
-    msg.text = "/aww"
+    msg.text = "/aww+cats+dogs+animalsbeingderps+animalsbeingjerks"
   if(msg.text === "🐈")
     msg.text = "/cats"
   if(msg.text === "🦮")
     msg.text = "/dogs"
   if(msg.text === "🎬")
-    msg.text = "/movies+television"
+    msg.text = "/movies+television+anime"
   if(msg.text === "🦠")
     msg.text = "/coronavirus"
   if(msg.text === "🤔")
-    msg.text = "/todayilearned+youshouldknow"
+    msg.text = "/todayilearned+youshouldknow+outoftheloop+wikipedia+howto+iwanttolearn+learnuselesstalents+diy"
   if(msg.text === "😳" || 
     msg.text === "😱" || 
     msg.text === "😨" || 
     msg.text === "😰" ||
     msg.text === "🤯")
-    msg.text = "/interestingasfuck+mildlyinteresting+woahdude"
-  if(msg.text === "👌" || 
-    msg.text === "👌🏻" || 
-    msg.text === "👌🏼" || 
-    msg.text === "👌🏽" || 
-    msg.text === "👌🏾" || 
-    msg.text === "👌🏿")
-    msg.text = "/internetisbeautiful+dataisbeautiful"    
+    msg.text = "/interestingasfuck+mildlyinteresting+woahdude+damnthatsinteresting+beamazed+thatsinsane+unexpected"
+  if(msg.text.includes("👌"))
+    msg.text = "/internetisbeautiful+dataisbeautiful+art+animation+artporn+pixelart+oddlysatisfying+cityporn+designporn"    
   if(msg.text === "😋" ||
     msg.text ==="🤤")
-    msg.text = "/food+foodporn"    
+    msg.text = "/food+foodporn+seriouseats+recipes+veganrecipes+pizza"    
   if(msg.text === "🥱" ||
     msg.text === "😴")
     msg.text = "/nosleep"
@@ -504,17 +500,18 @@ bot.on("text", msg => {
     msg.text = "/random"
   if(msg.text === "🇮🇳")
     msg.text = "/india"
-  
+  if(msg.text.includes("🤦‍") ||
+    msg.text.includes("🤦") ||
+    msg.text.includes("🤦"))
+    msg.text = "/indianpeoplefacebook+facepalm"
+  if(msg.text.includes("💪"))
+     msg.text = "/productivity+happy+getmotivated+selfimprovement+quotesporn+fitness"
   //middle finger emoji
-  if(msg.text === "🖕" || 
-     msg.text === "🖕🏻" || 
-     msg.text === "🖕🏼" || 
-     msg.text === "🖕🏽" || 
-     msg.text === "🖕🏾" || 
-     msg.text === "🖕🏿" ||
+  if(msg.text.includes("🖕") ||
      msg.text === "🍑")
-    msg.text = "/nsfw+gonewild+nsfw_gifs"  
-  
+    msg.text = "/nsfw+gonewild+nsfw_gifs+celebnsfw+nsfw_gif+sexygirls+toocuteforporn+justhotwomen+sexybutnotporn"  
+  if(msg.text === "💩")
+    msg.text = "/shittylifeprotips+shittyfoodporn+shittyreactiongifs+crappydesign+shittymoviedetails+shitpost"
     //start/help menu
   if (
     msg.text === "/start" ||
@@ -526,9 +523,9 @@ bot.on("text", msg => {
 
 Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
-_New additions:_ 
+_New features:_ 
 *EMOJI MODE* -- /emoji _A new way to browse subreddits_.
-*Multireddit* -- Now combine multiple subreddits and create your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
+*Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
 
 *How to use Reddgram:*
 
@@ -545,9 +542,7 @@ For eg. \`aww top\` or \`\/aww top\` (long press to copy) to get top threads of 
 
 Note: Default option is *hot*, so /aww will return hottest threads from the past day.
 
-2. _NEW_ -- 
-
-3. /random - random threads from all subreddits
+2. /random - random threads from all subreddits
 
     /all - all hot threads from all subreddits
 
@@ -648,39 +643,43 @@ _💡Tip for mobile users: Touch and hold on any of the above commands to be abl
   ) {
     skips = 0;
     const message = `Welcome to a whole new way to browse Reddit: *Emoji Mode* is here.
-Send any of these emojis to browse the corresponding subreddit(s).
+Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
-😂😀😃😄😁😆😅🤣 - memes+jokes+funny  
+😂😀😃😄😁😆😅🤣 - subs that tickle your funny bone 
 
-🧐 - pics+gifs+videos
+🧐👀 - browse pics/gifs/videos
 
 🚿 - showerthoughts
 
-😍 - aww
+😍 - subs that make you go aww
 
 🐈 - cats
 
 🦮 - dogs
 
-🎬 - movies+television
+🎬 - movies+television+anime
 
 🦠 - coronavirus
 
-🤔 - todayilearned+youshouldknow
+🤔 - know stuff you never knew
 
-😳😱😨😰🤯 - interestingasfuck+mildlyinteresting+woahdude
+💪 - self improvement subs
+
+😳😱😨😰🤯 - stuff that will blow your mind
 
 🇮🇳 - india
 
-👌 - internetisbeautiful+dataisbeautiful
+👌 - subs that makes you go wow
 
-😋🤤 - food+foodporn
+😋🤤 - mmmm! tasty food
 
-🥱😴 - nosleep
+💩 - shitty subs
+
+🥱😴 - subs that will haunt your sleep
 
 😎 - random
 
-🖕🍑 - nsfw+gonewild+nsfwgifs
+🖕🍑 - nsfw🔞 
 
 ...and many more coming soon`;
     logger.info("User: " + msg.text);
@@ -750,6 +749,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
 bot.on("callbackQuery", msg => {
   if (msg.data === "callback_query_next") {
     //console.log("test")
+    const parse = "Markdown";
     const userId = `id_${msg.message.chat.id}`;
     const messageId = msg.message.chat.id;
     //console.log(msg.message.chat.id)
@@ -757,8 +757,9 @@ bot.on("callbackQuery", msg => {
     let subreddit = "",
       option = "";
     let postNum = 0;
-
-    if (db[userId].hasOwnProperty("subreddit")) {
+    if(db[userId] === undefined)
+      bot.sendMessage(messageId,"_ERROR: Sorry, please re-submit your previous request._", {parse})
+    else if (db[userId].hasOwnProperty("subreddit")) {
       subreddit = db[userId]["subreddit"];
     } else {
       return bot.sendMessage(
@@ -786,6 +787,7 @@ bot.on("callbackQuery", msg => {
     }
     //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
+    bot.answerCallbackQuery(msg.id)
   }
 });
 

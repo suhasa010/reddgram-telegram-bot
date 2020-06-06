@@ -17,7 +17,7 @@
     "prettytime": "^1.0.0",
     "logger": "^0.0.1",
     "tld-extract": "^1.0.1",
-    "mongoose": "^5.9.16"
+    "mongoose": "^5.9.18"
   },
   "engines": {
     "node": "12.x"
