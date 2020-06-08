@@ -75,7 +75,7 @@ const bot = new TeleBot(process.env.BOT_TOKEN);
 var prettytime = require("prettytime");
 
 let db = {};
-let rLimit = 100;
+let rLimit = 200;
 var skips = 0; //keep track of no. of sticky threads skipped
 
 function updateUser(userId, subreddit, option, postNum) {
@@ -139,6 +139,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "preview.redd.it"
         ) {
           // sendPlsWait(messageId);
+          bot.sendChatAction(messageId, "upload_photo")
           return sendImagePost(messageId, redditPost, markup);
         }
         //gif
@@ -146,6 +147,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.preview &&
           redditPost.preview.images[0].variants.mp4
         ) {
+          bot.sendChatAction(messageId, "upload_video")
           // sendPlsWait(messageId);
           sendGifPost(messageId, redditPost, markup);
         }
@@ -157,6 +159,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "i.redd.it" ||
           redditPost.domain === "gfycat.com"
         ) {
+          bot.sendChatAction(messageId, "upload_video")
           return sendVideoPost(messageId, redditPost, markup);
         }
         //link
@@ -166,10 +169,12 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           ) &&
           !redditPost.selftext
         ) {
+          bot.sendChatAction(messageId, "typing")
           return sendLinkPost(messageId, redditPost, markup);
         }
         //text
         else {
+           bot.sendChatAction(messageId, "typing")
           return sendMessagePost(messageId, redditPost, markup);
         }
 
@@ -320,6 +325,7 @@ function sendLinkPost(messageId, redditPost, markup) {
 function sendGifPost(messageId, redditPost, markup) {
   //let url = redditPost.url;
   //url = url.replace(/&amp;/g, '&');
+  const parse = "HTML";
   let gifArr = redditPost.preview.images[0].variants.mp4.resolutions;
   let gif = gifArr[gifArr.length - 1].url;
   gif = gif.replace(/&amp;/g, "&");
@@ -420,7 +426,7 @@ function sendMessagePost(messageId, redditPost, markup) {
       preview +
       selfTextLimitExceeded(messageId) +
       `\n\n⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
-✏️ Posted ${timeago} ago in <b>r‏/${redditPost.subreddit}</b> by u/${redditPost.author}`;
+✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
     logger.info("Request completed: long text thread");
     //nsfw indicator
     if (redditPost.over_18 === true) message = "🔞" + message;
@@ -530,13 +536,13 @@ _New features:_
 *How to use Reddgram:*
 
 1. *Format:* 
-          *subreddit_name  sort_option\*  
+          *<subreddit_name>  [sort_option]\*  
                       (or) 
-          *\/subreddit_name  sort_option\*
+          *\/<subreddit_name>  [sort_option]\*
 
-a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
+      a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
 
-b. *sort_option* can be any of the these /options. 
+      b. (optional) *sort_option* can be any of the these /options. 
 
 For eg. \`aww top\` or \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
@@ -647,29 +653,29 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 😂😀😃😄😁😆😅🤣 - subs that tickle your funny bone 
 
-🧐👀 - browse pics/gifs/videos
-
-🚿 - showerthoughts
+🧐👀 - browse pics/gifs/videos from various subs
 
 😍 - subs that make you go aww
+
+👌 - subs that make you go wow
+
+😳😱😨😰🤯 - subs that blow your mind
+
+🤔 - know stuff you never knew
 
 🐈 - cats
 
 🦮 - dogs
 
+🚿 - showerthoughts
+
 🎬 - movies+television+anime
 
 🦠 - coronavirus
 
-🤔 - know stuff you never knew
-
 💪 - self improvement subs
 
-😳😱😨😰🤯 - stuff that will blow your mind
-
 🇮🇳 - india
-
-👌 - subs that makes you go wow
 
 😋🤤 - mmmm! tasty food
 
@@ -679,7 +685,7 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 😎 - random
 
-🖕🍑 - nsfw🔞 
+🍑🖕 - nsfw🔞 
 
 ...and many more coming soon`;
     logger.info("User: " + msg.text);
@@ -746,7 +752,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
   }
 });
 
-bot.on("callbackQuery", msg => {
+bot.on("callbackQuery", async (msg) => {
   if (msg.data === "callback_query_next") {
     //console.log("test")
     const parse = "Markdown";
@@ -787,7 +793,7 @@ bot.on("callbackQuery", msg => {
     }
     //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
-    bot.answerCallbackQuery(msg.id)
+    await bot.answerCallbackQuery(msg.id)
   }
 });
 
