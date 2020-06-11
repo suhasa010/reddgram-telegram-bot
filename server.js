@@ -71,7 +71,7 @@ const TeleBot = require("telebot");
 const fs = require("fs");
 const request = require("request");
 
-const bot = new TeleBot(process.env.BOT_TOKEN);
+var bot = new TeleBot(process.env.BOT_TOKEN);
 var prettytime = require("prettytime");
 
 let db = {};
@@ -139,7 +139,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "preview.redd.it"
         ) {
           // sendPlsWait(messageId);
-          bot.sendChatAction(messageId, "upload_photo")
+          bot.sendChatAction(messageId, "upload_photo");
           return sendImagePost(messageId, redditPost, markup);
         }
         //gif
@@ -147,7 +147,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.preview &&
           redditPost.preview.images[0].variants.mp4
         ) {
-          bot.sendChatAction(messageId, "upload_video")
+          bot.sendChatAction(messageId, "upload_video");
           // sendPlsWait(messageId);
           sendGifPost(messageId, redditPost, markup);
         }
@@ -159,7 +159,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "i.redd.it" ||
           redditPost.domain === "gfycat.com"
         ) {
-          bot.sendChatAction(messageId, "upload_video")
+          bot.sendChatAction(messageId, "upload_video");
           return sendVideoPost(messageId, redditPost, markup);
         }
         //link
@@ -169,12 +169,12 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           ) &&
           !redditPost.selftext
         ) {
-          bot.sendChatAction(messageId, "typing")
+          bot.sendChatAction(messageId, "typing");
           return sendLinkPost(messageId, redditPost, markup);
         }
         //text
         else {
-           bot.sendChatAction(messageId, "typing")
+          bot.sendChatAction(messageId, "typing");
           return sendMessagePost(messageId, redditPost, markup);
         }
 
@@ -267,7 +267,7 @@ function sendImagePost(messageId, redditPost, markup) {
     var site = `${websitename[0]}${websitename[1]}`;
   else var site = websitename[0];
 
-  if (redditPost.score > 1000)
+  if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
@@ -301,7 +301,7 @@ function sendLinkPost(messageId, redditPost, markup) {
   //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
   var websitename = domain.split(".");
 
-  if (redditPost.score > 1000)
+  if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
@@ -335,7 +335,7 @@ function sendGifPost(messageId, redditPost, markup) {
     decimals: 0
   });
 
-  if (redditPost.score > 1000)
+  if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
@@ -368,7 +368,7 @@ function sendVideoPost(messageId, redditPost, markup) {
   if (websitename[0] === "youtu" || websitename[0] === "redd")
     var site = `${websitename[0]}${websitename[1]}`;
   else var site = websitename[0];
-  if (redditPost.score > 1000)
+  if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
@@ -417,7 +417,7 @@ function sendMessagePost(messageId, redditPost, markup) {
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
   //if selftext exceeds limit
   if (redditPost.selftext.length > 3700) {
-    if (redditPost.score > 1000)
+    if (redditPost.score >= 1000)
       var points = (redditPost.score / 1000).toFixed(1) + "k";
     else var points = redditPost.score;
     const preview = redditPost.selftext.slice(0, 3500);
@@ -434,7 +434,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     return bot.sendMessage(messageId, message, { parse, markup });
   }
 
-  if (redditPost.score > 1000)
+  if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
 
@@ -461,69 +461,70 @@ function sendMessagePost(messageId, redditPost, markup) {
 bot.on("text", msg => {
   const parse = "Markdown";
   //emoji mode
-  if(msg.text === "😂" || 
-     msg.text ==="😀" || 
-     msg.text ==="😃" || 
-     msg.text ==="😄" || 
-     msg.text ==="😁" || 
-     msg.text ==="😆" || 
-     msg.text ==="😅" || 
-     msg.text ==="🤣")
-    msg.text = "/memes+jokes+funny+humor+programmerhumor+dadjokes+punny"
-  
-  if(msg.text === "🧐" ||
-    msg.text === "👀")
-    msg.text = "/pics+gifs+videos+educationalgifs+wholesomegifs+reactiongifs+perfectloops+photoshopbattles+historyporn+spaceporn+comics"
-  if(msg.text === "🚿")
-    msg.text = "/showerthoughts"
-  if(msg.text === "😍")
-    msg.text = "/aww+cats+dogs+animalsbeingderps+animalsbeingjerks"
-  if(msg.text === "🐈")
-    msg.text = "/cats"
-  if(msg.text === "🦮")
-    msg.text = "/dogs"
-  if(msg.text === "🎬")
-    msg.text = "/movies+television+anime"
-  if(msg.text === "🦠")
-    msg.text = "/coronavirus"
-  if(msg.text === "🤔")
-    msg.text = "/todayilearned+youshouldknow+outoftheloop+wikipedia+howto+iwanttolearn+learnuselesstalents+diy"
-  if(msg.text === "😳" || 
-    msg.text === "😱" || 
-    msg.text === "😨" || 
+  if (
+    msg.text === "😂" ||
+    msg.text === "😀" ||
+    msg.text === "😃" ||
+    msg.text === "😄" ||
+    msg.text === "😁" ||
+    msg.text === "😆" ||
+    msg.text === "😅" ||
+    msg.text === "🤣"
+  )
+    msg.text = "/memes+jokes+funny+humor+programmerhumor+dadjokes+punny";
+
+  if (msg.text === "🧐" || msg.text === "👀" || msg.text === "👁")
+    msg.text =
+      "/pics+gifs+videos+educationalgifs+wholesomegifs+reactiongifs+perfectloops+photoshopbattles+historyporn+spaceporn+comics";
+  if (msg.text === "🚿") msg.text = "/showerthoughts";
+  if (msg.text === "😍")
+    msg.text = "/aww+cats+dogs+animalsbeingderps+animalsbeingjerks";
+  if (msg.text === "🐈") msg.text = "/cats";
+  if (msg.text === "🦮") msg.text = "/dogs";
+  if (msg.text === "🎬") msg.text = "/movies+television+anime";
+  if (msg.text === "🦠") msg.text = "/coronavirus";
+  if (msg.text === "🤔")
+    msg.text =
+      "/todayilearned+youshouldknow+outoftheloop+wikipedia+howto+iwanttolearn+learnuselesstalents+diy";
+  if (
+    msg.text === "😳" ||
+    msg.text === "😱" ||
+    msg.text === "😨" ||
     msg.text === "😰" ||
-    msg.text === "🤯")
-    msg.text = "/interestingasfuck+mildlyinteresting+woahdude+damnthatsinteresting+beamazed+thatsinsane+unexpected"
-  if(msg.text.includes("👌"))
-    msg.text = "/internetisbeautiful+dataisbeautiful+art+animation+artporn+pixelart+oddlysatisfying+cityporn+designporn"    
-  if(msg.text === "😋" ||
-    msg.text ==="🤤")
-    msg.text = "/food+foodporn+seriouseats+recipes+veganrecipes+pizza"    
-  if(msg.text === "🥱" ||
-    msg.text === "😴")
-    msg.text = "/nosleep"
-  if(msg.text === "😎")
-    msg.text = "/random"
-  if(msg.text === "🇮🇳")
-    msg.text = "/india"
-  if(msg.text.includes("🤦‍") ||
+    msg.text === "🤯"
+  )
+    msg.text =
+      "/interestingasfuck+mildlyinteresting+woahdude+damnthatsinteresting+beamazed+thatsinsane+unexpected";
+  if (msg.text.includes("👌"))
+    msg.text =
+      "/internetisbeautiful+dataisbeautiful+art+animation+artporn+pixelart+oddlysatisfying+cityporn+designporn";
+  if (msg.text === "😋" || msg.text === "🤤")
+    msg.text = "/food+foodporn+seriouseats+recipes+veganrecipes+pizza";
+  if (msg.text === "🥱" || msg.text === "😴") msg.text = "/nosleep";
+  if (msg.text === "😎") msg.text = "/random";
+  if (
+    msg.text.includes("🤦‍") ||
     msg.text.includes("🤦") ||
-    msg.text.includes("🤦"))
-    msg.text = "/indianpeoplefacebook+facepalm"
-  if(msg.text.includes("💪"))
-     msg.text = "/productivity+happy+getmotivated+selfimprovement+quotesporn+fitness"
+    msg.text.includes("🤦")
+  )
+    msg.text = "/indianpeoplefacebook+facepalm";
+  if (msg.text.includes("💪"))
+    msg.text =
+      "/productivity+happy+getmotivated+selfimprovement+quotesporn+fitness";
   //middle finger emoji
-  if(msg.text.includes("🖕") ||
-     msg.text === "🍑")
-    msg.text = "/nsfw+gonewild+nsfw_gifs+celebnsfw+nsfw_gif+sexygirls+toocuteforporn+justhotwomen+sexybutnotporn"  
-  if(msg.text === "💩")
-    msg.text = "/shittylifeprotips+shittyfoodporn+shittyreactiongifs+crappydesign+shittymoviedetails+shitpost"
-    //start/help menu
+  if (msg.text.includes("🖕") || msg.text === "🍑")
+    msg.text =
+      "/nsfw+gonewild+nsfw_gifs+celebnsfw+nsfw_gif+sexygirls+toocuteforporn+justhotwomen+sexybutnotporn";
+  if (msg.text === "💩")
+    msg.text =
+      "/shittylifeprotips+shittyfoodporn+shittyreactiongifs+crappydesign+shittymoviedetails+shitpost";
+  //start/help menu
   if (
     msg.text === "/start" ||
-    msg.text === "/help" || 
-    msg.text === "/help@RedditBrowserBot" || 
-    msg.text ==="/start@RedditBrowserBot") {
+    msg.text === "/help" ||
+    msg.text === "/help@RedditBrowserBot" ||
+    msg.text === "/start@RedditBrowserBot"
+  ) {
     skips = 0;
     const message = `*Welcome to Reddgram Bot*
 
@@ -643,29 +644,28 @@ _💡Tip for mobile users: Touch and hold on any of the above commands to be abl
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
   //emoji mode
-  else if (
-    msg.text === "/emoji" ||
-    msg.text === "/emoji@RedditBrowserBot"
-  ) {
+  else if (msg.text === "/emoji" || msg.text === "/emoji@RedditBrowserBot") {
     skips = 0;
     const message = `Welcome to a whole new way to browse Reddit: *Emoji Mode* is here.
 Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 😂😀😃😄😁😆😅🤣 - subs that tickle your funny bone 
 
-🧐👀 - browse pics/gifs/videos from various subs
+🧐👀👁 - browse pics/gifs/videos from various subs
 
 😍 - subs that make you go aww
 
 👌 - subs that make you go wow
 
-😳😱😨😰🤯 - subs that blow your mind
+😳😱😨😰🤯 - subs that blow your mind away
+
+😋🤤 - mmmm! tasty food
 
 🤔 - know stuff you never knew
 
-🐈 - cats
+🐈 - meow meow
 
-🦮 - dogs
+🦮 - ruff ruff
 
 🚿 - showerthoughts
 
@@ -675,9 +675,7 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 💪 - self improvement subs
 
-🇮🇳 - india
-
-😋🤤 - mmmm! tasty food
+🤦🤦‍♀️ - _facepalm_
 
 💩 - shitty subs
 
@@ -691,7 +689,7 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
-    
+
   //options
   else if (
     msg.text === "/options" ||
@@ -735,7 +733,8 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       const postNum = 0;
       updateUser(userId, subreddit, option, postNum);
       sendRedditPost(messageId, subreddit, option, postNum);
-    } else { //for PMs
+    } else {
+      //for PMs
       skips = 0;
       logger.info("User(" + msg.from.username + "): " + msg.text);
 
@@ -752,7 +751,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
   }
 });
 
-bot.on("callbackQuery", async (msg) => {
+bot.on("callbackQuery", async msg => {
   if (msg.data === "callback_query_next") {
     //console.log("test")
     const parse = "Markdown";
@@ -763,9 +762,14 @@ bot.on("callbackQuery", async (msg) => {
     let subreddit = "",
       option = "";
     let postNum = 0;
-    if(db[userId] === undefined)
-      bot.sendMessage(messageId,"_ERROR: Sorry, please re-submit your previous request._", {parse})
-    else if (db[userId].hasOwnProperty("subreddit")) {
+    if (db[userId] === undefined) {
+      await bot.answerCallbackQuery(msg.id);
+      return bot.sendMessage(
+        messageId,
+        "_ERROR: Sorry, please re-submit your previous request._",
+        { parse }
+      );
+    } else if (db[userId].hasOwnProperty("subreddit")) {
       subreddit = db[userId]["subreddit"];
     } else {
       return bot.sendMessage(
@@ -793,8 +797,63 @@ bot.on("callbackQuery", async (msg) => {
     }
     //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
-    await bot.answerCallbackQuery(msg.id)
+    await bot.answerCallbackQuery(msg.id);
   }
 });
+
+/*function fetchThreads(query, messageId, postNum) {
+ 
+}
+
+bot.on("inlineQuery", msg => {
+  console.log("inside inline query")
+  var option = "hot"
+  var subreddit = "jokes"
+  var postNum = 0
+   console.log("inside fetchThreads")
+  //[subreddit, option] = msg.split(" ");
+  const options = getOptions(option, rLimit);
+  var start = new Date();
+  request(
+    { url: `http://www.reddit.com/r/${subreddit}/${options}`, json: true },
+    function(error, response, body) {
+      // check if response was successful
+      if (!error && response.statusCode === 200) {
+        // send error message if the bot encountered one
+        if (body.hasOwnProperty("error") || body.data.children.length < 1) {
+          return sendErrorMsg(msg.id);
+        } else if (body.data.children.length - 1 < postNum) {
+          return noMorePosts(msg.id);
+        }
+        //logger.info(postNum)
+        //if (body.data.children[0].data.subreddit_type === "restricted")
+        //return Restricted(messageId);
+
+        // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
+        var redditPost = body.data.children[postNum].data;
+
+        //ignore stickied/pinned posts
+        /*for (postNum = skips; redditPost.stickied === true; postNum++) {
+          try {
+            redditPost = body.data.children[postNum + 1].data;
+          } catch (err) {
+            return noMorePosts(messageId);
+          }
+          skips = skips + 1;
+          //logger.info(postNum)
+        }
+
+        //if(redditPost.stickied === true)
+        //bot.click()
+        redditPost.title = redditPost.title.replace(/&amp;/g, "&");
+        const answers = redditPost.title
+        //return redditPost.title
+        console.log("results:  "+redditPost.title)
+        return bot.answerInlineQuery(msg.id,answers);
+        }
+    }
+  );
+  
+});*/
 
 bot.connect();
