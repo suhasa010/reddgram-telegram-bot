@@ -1,12 +1,12 @@
 **Welcome to Reddgram Bot**
 
-**Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
+**Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!**
 
 New features: 
 *EMOJI MODE* -- /emoji A new way to browse subreddits.
 *Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. /gifs+pics+videos (long press to copy)
 
-**How to use Reddgram:
+**How to use Reddgram:**
 
 1. Format: 
           **<subreddit_name>  [sort_option]  
