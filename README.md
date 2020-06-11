@@ -1,37 +1,74 @@
-*Welcome to Reddgram Bot*
+Welcome to Reddgram Bot
 
-Browse all of reddit's pics, gifs, videos, cats, memes, news and much more right here from Telegram!
+Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
-*How to use Reddgram:*
+New features: 
+EMOJI MODE -- /emoji A new way to browse subreddits.
+Multireddit -- Now combine multiple subreddits and browse your own multireddit. eg. /gifs+pics+videos (long press to copy)
 
-1. *Format:* 
-*subreddit_name  sort_option\*  
-            (or) 
-*\/subreddit_name  sort_option\*
+How to use Reddgram:
 
-You can customize the "sort" option with any of the following(you can view this section any time by sending /options): 
+1. Format: 
+          <subreddit_name>  [sort_option]  
+                      (or) 
+          /<subreddit_name>  [sort_option]
 
-1. _(default)_ *hot* - Hot threads from past day 
-2. *top* - Top threads from past day
-3. *toph* - Top threads from past hour
-4. *topw* - Top threads from past week
-5. *topm* - Top threads from past month
-6. *topy* - Top threads from past year
-7. *all* - Top threads of all time
-8. *new* - Latest threads
+      a. subreddit_name can be any of the subreddits in reddit. see /list for the most popular ones.
 
-2. If you want to get top threads of *r/aww* (a sub dedicated to cute pets), Enter: 
+      b. (optional) sort_option can be any of the these /options. 
 
-              \`aww top\` or \`\/aww top\` (long press to copy).
+For eg. aww top or /aww top (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
-Default option is *hot*, so /aww will return hottest threads from the past day.
+Note: Default option is hot, so /aww will return hottest threads from the past day.
 
-3. You can also browse any *random* subreddit or *all* which returns all the hottest threads from all subreddits. To do that, just send /random or /all respectively.
+2. /random - random threads from all subreddits
 
-4. Send /list for a list of most popular subreddits.
+    /all - all hot threads from all subreddits
 
-5. Send /popular for most popular threads from all subreddits.
+    /popular - most popular threads from all subreddits.
 
-_💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
+💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option
 
-Please report any bugs/feature requests here - https://bit.ly/2Z7gA7k
+
+/emoji:
+
+Welcome to a whole new way to browse Reddit: Emoji Mode is here.
+Send any of these emojis to browse the corresponding subreddit(s) a.k.a subs.
+
+😂😀😃😄😁😆😅🤣 - subs that tickle your funny bone 
+
+🧐👀👁 - browse pics/gifs/videos from various subs
+
+😍 - subs that make you go aww
+
+👌 - subs that make you go wow
+
+😳😱😨😰🤯 - subs that blow your mind away
+
+😋🤤 - mmmm! tasty food
+
+🤔 - know stuff you never knew
+
+🐈 - meow meow
+
+🦮 - ruff ruff
+
+🚿 - showerthoughts
+
+🎬 - movies+television+anime
+
+🦠 - coronavirus
+
+💪 - self improvement subs
+
+🤦🤦‍♀️ - facepalm
+
+💩 - shitty subs
+
+🥱😴 - subs that will haunt your sleep
+
+😎 - random
+
+🍑🖕 - nsfw🔞 
+
+...and many more coming soon
