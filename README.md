@@ -9,9 +9,9 @@ New features:
 **How to use Reddgram:**
 
 1. Format: 
-          <subreddit_name>  [sort_option]  
+          \<subreddit_name\>  [sort_option]  
                       (or) 
-          /<subreddit_name>  [sort_option]
+          \/<subreddit\_name\>  [sort_option]
 
       a. subreddit_name can be any of the subreddits in reddit. see /list for the most popular ones.
 
