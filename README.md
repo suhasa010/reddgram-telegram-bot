@@ -1,17 +1,17 @@
-Welcome to Reddgram Bot
+**Welcome to Reddgram Bot**
 
-Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
+**Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
 New features: 
-EMOJI MODE -- /emoji A new way to browse subreddits.
-Multireddit -- Now combine multiple subreddits and browse your own multireddit. eg. /gifs+pics+videos (long press to copy)
+*EMOJI MODE* -- /emoji A new way to browse subreddits.
+*Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. /gifs+pics+videos (long press to copy)
 
-How to use Reddgram:
+**How to use Reddgram:
 
 1. Format: 
-          <subreddit_name>  [sort_option]  
+          **<subreddit_name>  [sort_option]  
                       (or) 
-          /<subreddit_name>  [sort_option]
+          **/<subreddit_name>  [sort_option]
 
       a. subreddit_name can be any of the subreddits in reddit. see /list for the most popular ones.
 
@@ -30,7 +30,7 @@ Note: Default option is hot, so /aww will return hottest threads from the past d
 💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option
 
 
-/emoji:
+**/emoji:
 
 Welcome to a whole new way to browse Reddit: Emoji Mode is here.
 Send any of these emojis to browse the corresponding subreddit(s) a.k.a subs.
