@@ -17,7 +17,7 @@ New features:
 
       b. (optional) sort_option can be any of the these /options. 
 
-For eg. aww top or /aww top (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
+For eg. *aww top* or */aww top* (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
 Note: Default option is hot, so /aww will return hottest threads from the past day.
 
@@ -30,7 +30,7 @@ Note: Default option is hot, so /aww will return hottest threads from the past d
 💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option
 
 
-**/emoji:
+**/emoji:**
 
 Welcome to a whole new way to browse Reddit: Emoji Mode is here.
 Send any of these emojis to browse the corresponding subreddit(s) a.k.a subs.
