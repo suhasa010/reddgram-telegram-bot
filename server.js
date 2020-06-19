@@ -12,12 +12,12 @@ const app = express();
 // console.log(logRoutes);
 
 //app.use(logRoutes);
-/*
+
 app.get("/", (request, response) => {
   console.log(Date.now() + " Ping Received");
   response.sendStatus(200);
 });
-*/
+
 app.listen(process.env.PORT);
 
 /*setInterval(() => {
