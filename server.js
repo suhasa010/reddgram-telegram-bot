@@ -12,7 +12,7 @@ const app = express();
 // console.log(logRoutes);
 
 //app.use(logRoutes);
-
+/*
 app.get("/", (request, response) => {
   console.log(Date.now() + " Ping Received");
   response.sendStatus(200);
@@ -21,7 +21,7 @@ app.listen(process.env.PORT);
 setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
 }, 200000);
-
+*/
 
 /*const MongoClient = require('mongodb').MongoClient;
 const uri = "mongodb+srv://db-user01:8fEehuKBBtHklKXC@cluster0-mhe7d.azure.mongodb.net/test?retryWrites=true&w=majority";
