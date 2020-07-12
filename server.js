@@ -20,6 +20,18 @@ app.get("/", (request, response) => {
 
 app.listen(process.env.PORT);
 
+const isOwner = (req, res, next) => {
+  const secret = req.query.secret;
+  
+  if (secret === process.env.SECRET) {
+    return next();
+  }
+  
+  return res.status(401).send('you don\'t have permission');
+}
+
+app.use('/static', isOwner, express.static(__dirname));
+
 /*setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
 }, 200000);
