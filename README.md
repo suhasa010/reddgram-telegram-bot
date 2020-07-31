@@ -69,6 +69,4 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a subs.
 
 😎 - random
 
-🍑🖕 - nsfw🔞 
-
 ...and many more coming soon
