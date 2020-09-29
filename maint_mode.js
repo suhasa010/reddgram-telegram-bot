@@ -21,7 +21,7 @@ const request = require("request");
 const bot = new TeleBot(process.env.BOT_TOKEN);
 
 bot.on("text", msg => {
-  bot.sendMessage(msg.chat.id,"Bot taken down due to major service issues in my host glitch.com. Any updates about the same will be posted on @reddgramIssues. Thanks for the cooperation.")
+  bot.sendMessage(msg.chat.id,"Bot taken down for maintenance. Any updates about the same will be posted on @reddgramIssues. Thanks for the cooperation.")
 });
        
 bot.connect()

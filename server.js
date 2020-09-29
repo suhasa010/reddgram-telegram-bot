@@ -1,11 +1,14 @@
+//import sqlite3 from 'sqlite3'
+//import { open } from 'sqlite'
 //Don't sleep
 const http = require("http");
 const express = require("express");
+require('dotenv').config();
 
 //const logRoutes = require("./routes/log.routes");
 //const initDB = require("./db");
 //const Log = require("./models/Log");
-const app = express();
+//const app = express();
 
 //initDB();
 
@@ -13,13 +16,16 @@ const app = express();
 
 //app.use(logRoutes);
 
+/*
 app.get("/", (request, response) => {
   console.log(Date.now() + " Ping Received");
   response.sendStatus(200);
 });
 
 app.listen(process.env.PORT);
+*/
 
+/*
 const isOwner = (req, res, next) => {
   const secret = req.query.secret;
   
@@ -31,6 +37,7 @@ const isOwner = (req, res, next) => {
 }
 
 app.use('/static', isOwner, express.static(__dirname));
+*/
 
 /*setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
@@ -52,8 +59,17 @@ client.connect(err => {
 });
 */
 
+/*
+(async () => {
+  const db = await open({
+    filename: '/tmp/database.db',
+    driver: sqlite3.cached.Database
+  })
+})()
+*/
+
 //var logger = require('logger').createLogger(); // logs to STDOUT
-var logger = require("logger").createLogger("development.log"); // logs to a file
+var logger = require("logger").createLogger("/home/pi/reddgram-telegram-bot/development.log"); // logs to a file
 
 //custom date for logging
 let options = {
@@ -85,9 +101,11 @@ var parser = require("tld-extract");
 const TeleBot = require("telebot");
 const fs = require("fs");
 const request = require("request");
+const BOT_TOKEN = process.env.BOT_TOKEN;
 
-var bot = new TeleBot(process.env.BOT_TOKEN);
+var bot = new TeleBot(BOT_TOKEN);
 var prettytime = require("prettytime");
+const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 
 let db = {};
 let rLimit = 200;
@@ -546,6 +564,7 @@ bot.on("text", msg => {
 Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
 _New features:_ 
+*Multi Mode* -- /multi to get started on how to browse multiple threads at a time.
 *EMOJI MODE* -- /emoji _A new way to browse subreddits_.
 *Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
 
@@ -729,6 +748,43 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
+  else if (
+    msg.text === "/contact" ||
+    msg.text === "/contact@RedditBrowserBot"
+  ) {
+      skips = 0;
+      const message = `You can contact me @suhasa010 if you face any issues or have a feature request. join @reddgramIssues for updates related to the bot.
+      @ssjprojects for info on my other projects.
+      `;
+      logger.info("User: " + msg.text);
+      return bot.sendMessage(msg.chat.id, message, { parse });
+  }
+  else if (
+    msg.text === "/multi" ||
+    msg.text === "/multi@RedditBrowserBot"
+  ) {
+      skips = 0;
+      const message = `*Multi Mode* is finally here! (beta feature)
+      
+      Now browse multiple threads at a time as opposed to clicking next after every single one.
+      
+      Just send 
+      
+      \`/aww new 5\`
+      
+      (replace aww with any of the subreddits you want to browse, new with any of the options provided in the help page)
+      
+      Currently this mode has some limitations;
+      1. Max number of threads that can be fetched at a time is 5 (might change in the future).
+      2. Next button is broken in Multi Mode. Send the usual commands for it to work as expected (Will be fixed later).
+      3. This mode only works in PMs, so as to not flood a group with multiple messages (might change in the future).
+      4. Currently you will have to scroll from bottom to top to be able to browse the fetched threads.
+      
+      There may be some bugs since this feature is still in beta, please report them over at @reddgramIssues.
+      `;
+      logger.info("User: " + msg.text);
+      return bot.sendMessage(msg.chat.id, message, { parse });
+  }
   //core logic
   else {
     //for groups
@@ -736,6 +792,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       if (msg.text.includes("/")) {
         msg.text = msg.text.slice(1, msg.text.length);
       }
+      logger.info("User(" + msg.from.username + "): " + msg.text);
       var [subreddit, option] = msg.text.toLowerCase().split("@");
       var [mention, option1] = option.toLowerCase().split(" ");
       var option = option1;
@@ -758,10 +815,35 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       }
       const userId = `id_${msg.chat.id}`;
       const messageId = msg.chat.id;
-      const [subreddit, option] = msg.text.toLowerCase().split(" ");
-      const postNum = 0;
-      updateUser(userId, subreddit, option, postNum);
-      sendRedditPost(messageId, subreddit, option, postNum);
+      var postNum = 0;
+      const multiLimit = 5;
+      if(/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)){
+        var i;
+        //console.log("yes multi")
+        const [subreddit, option, numberPosts] = msg.text.toLowerCase().split(" ");
+        if(numberPosts <= multiLimit) {
+          for(i = 0; i < numberPosts; i++){
+            sendRedditPost(messageId, subreddit, option, postNum);
+            postNum = postNum + 1;
+          }
+        }
+        else {
+          return bot.sendMessage(messageId, `_ERROR: Sorry, we can't show more than ${multiLimit} threads in Multi Mode._`, {parse});
+        }
+        //var numUserId = userId.replace(/[^0-9]/g,'');
+      }
+      else{
+        //console.log("no multi")
+        const [subreddit, option] = msg.text.toLowerCase().split(" ");
+        console.log(userId+subreddit+option+postNum);
+        updateUser(userId, subreddit, option, postNum);
+        sendRedditPost(messageId, subreddit, option, postNum);
+      }
+      //console.log("main logic");
+      //console.log("message info="+msg)
+      //bot.sendMessage(messageId,"Multi Mode ON! [Go to Top](https://t.me/c/1155726669/"+msg.message_id+")", {parse})
+      //updateUser(userId, subreddit, option, postNum);
+      //sendRedditPost(messageId, subreddit, option, postNum);
     }
   }
 });
@@ -810,6 +892,8 @@ bot.on("callbackQuery", async msg => {
     if (postNum > rLimit - 1) {
       return sendLimitMsg(messageId);
     }
+    await db.exec('CREATE TABLE userlist (col id)')
+    await db.exec(`INSERT INTO tbl VALUES (${userId})`)
     //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
     await bot.answerCallbackQuery(msg.id);
@@ -871,4 +955,4 @@ bot.on("inlineQuery", msg => {
   
 });*/
 
-bot.connect();
+bot.start();
