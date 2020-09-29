@@ -45,7 +45,7 @@ app.use('/static', isOwner, express.static(__dirname));
 */
 
 /*const MongoClient = require('mongodb').MongoClient;
-const uri = "mongodb+srv://db-user01:8fEehuKBBtHklKXC@cluster0-mhe7d.azure.mongodb.net/test?retryWrites=true&w=majority";
+const uri = process.env.DB_URI;
 const client = new MongoClient(uri, { useNewUrlParser: true });
 client.connect(err => {
   const collection = client.db("test").collection("devices");
