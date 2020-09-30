@@ -13,11 +13,11 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "logger": "^0.0.1",
-    "mongoose": "^5.9.19",
+    "mongoose": "^5.10.7",
     "prettytime": "^1.0.0",
-    "sqlite": "^3.0.6",
-    "telebot": "^1.4.0",
-    "tld-extract": "^1.0.1"
+    "redis": "^3.0.2",
+    "telebot": "^1.4.1",
+    "tld-extract": "^1.1.4"
   },
   "engines": {
     "node": "12.x"

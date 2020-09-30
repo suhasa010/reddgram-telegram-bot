@@ -59,15 +59,21 @@ client.connect(err => {
 });
 */
 
-/*
-(async () => {
-  const db = await open({
-    filename: '/tmp/database.db',
-    driver: sqlite3.cached.Database
-  })
-})()
-*/
+const redis = require("redis");
+const client = redis.createClient();
+ 
+client.on("error", function(error) {
+  console.error(error);
+});
 
+//client.get("15024063",redis.print);
+
+/*
+client.set("key", "value", redis.print);
+client.get("key", redis.print);
+client.set("foo", "bar");
+client.get("foo", redis.print);
+*/
 //var logger = require('logger').createLogger(); // logs to STDOUT
 var logger = require("logger").createLogger("/home/pi/reddgram-telegram-bot/development.log"); // logs to a file
 
@@ -106,6 +112,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 var bot = new TeleBot(BOT_TOKEN);
 var prettytime = require("prettytime");
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
+
 
 let db = {};
 let rLimit = 200;
@@ -785,6 +792,33 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       logger.info("User: " + msg.text);
       return bot.sendMessage(msg.chat.id, message, { parse });
   }
+  
+  else if (msg.text.includes('/subscribe')) {
+    if (msg.text.includes("/")) {
+      msg.text = msg.text.slice(1, msg.text.length);
+    }
+    logger.info("User(" + msg.from.username + "): " + msg.text);
+    var [subscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
+    client.APPEND(msg.chat.id,`${subreddit}+`, function(err,res) {
+      return bot.sendMessage(msg.chat.id, `Successfully subscribed to r/${subreddit}!`)
+    });
+  }
+  else if (msg.text.includes('/subscriptions')) {
+    if (msg.text.includes("/")) {
+      msg.text = msg.text.slice(1, msg.text.length);
+    }
+    logger.info("User(" + msg.from.username + "): " + msg.text);
+    client.get(msg.chat.id, function(err,res) {
+      var subs = res.toLowerCase().split("+");
+      console.log(subs);
+      var i;
+      subs.forEach ( subs => {
+        if(subs !== '')
+          return bot.sendMessage(msg.chat.id,`r/${subs}\n`)
+      });
+    });
+  }
+
   //core logic
   else {
     //for groups
@@ -835,7 +869,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       else{
         //console.log("no multi")
         const [subreddit, option] = msg.text.toLowerCase().split(" ");
-        console.log(userId+subreddit+option+postNum);
+        //console.log(userId+subreddit+option+postNum);
         updateUser(userId, subreddit, option, postNum);
         sendRedditPost(messageId, subreddit, option, postNum);
       }
@@ -892,13 +926,20 @@ bot.on("callbackQuery", async msg => {
     if (postNum > rLimit - 1) {
       return sendLimitMsg(messageId);
     }
-    await db.exec('CREATE TABLE userlist (col id)')
-    await db.exec(`INSERT INTO tbl VALUES (${userId})`)
     //logger.info("after clicking next:"+postNum)
     sendRedditPost(messageId, subreddit, option, postNum);
     await bot.answerCallbackQuery(msg.id);
   }
 });
+
+setInterval(function(){
+  client.get("15024063", function(err, reply) {
+    const sub = reply;
+    option = "new";
+    sendRedditPost(15024063,sub,option,0)
+    console.log(sub+" "+option+" ")
+  });
+}, 1200 * 1000)
 
 /*function fetchThreads(query, messageId, postNum) {
  
