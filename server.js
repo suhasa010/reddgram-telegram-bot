@@ -939,7 +939,7 @@ setInterval(function(){
     sendRedditPost(15024063,sub,option,0)
     console.log(sub+" "+option+" ")
   });
-}, 120 * 1000)
+}, 300 * 1000)
 
 /*function fetchThreads(query, messageId, postNum) {
  
