@@ -932,14 +932,26 @@ bot.on("callbackQuery", async msg => {
   }
 });
 
-setInterval(function(){
-  client.get("15024063", function(err, reply) {
-    const sub = reply;
-    option = "new";
-    sendRedditPost(15024063,sub,option,0)
-    console.log(sub+" "+option+" ")
+setInterval( function() {
+  //var chat;
+  client
+  .multi()
+  .keys("*")
+  .exec(function(err, replies) {
+    replies.forEach(function (reply, index) {
+      var chats = reply.toString().split(",")
+      chats.forEach(function(chat) {
+            client.get(chat, function(err, reply) {
+            const sub = reply;
+            option = "hot";
+            sendRedditPost(chat,sub,option,0)
+            console.log(chat+" "+ sub +" "+ option +" ")
+        });
+      });   
+    });
   });
-}, 300 * 1000)
+  //console.log(chats)
+}, 3600 * 1000)
 
 /*function fetchThreads(query, messageId, postNum) {
  
