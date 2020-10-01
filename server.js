@@ -951,7 +951,7 @@ setInterval( function() {
     });
   });
   //console.log(chats)
-}, 3600 * 1000)
+}, 7200 * 1000)
 
 /*function fetchThreads(query, messageId, postNum) {
  
