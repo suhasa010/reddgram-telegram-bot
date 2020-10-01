@@ -570,23 +570,22 @@ bot.on("text", msg => {
 
 Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
-_New features:_ 
+_New features:_
+*Subscriptions* -- Subscribe to any subreddit by giving \`\/subscribe <subreddit_name>\`. More details in @ssjprojects. 
 *Multi Mode* -- /multi to get started on how to browse multiple threads at a time.
-*EMOJI MODE* -- /emoji _A new way to browse subreddits_.
+*Emoji Mode* -- /emoji _A new way to browse subreddits_.
 *Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
 
 *How to use Reddgram:*
 
 1. *Format:* 
-          *<subreddit_name>  [sort_option]\*  
-                      (or) 
-          *\/<subreddit_name>  [sort_option]\*
+          *\/subreddit_name  [sort_option]\*
 
       a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
 
       b. (optional) *sort_option* can be any of the these /options. 
 
-For eg. \`aww top\` or \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
+For eg. \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
 Note: Default option is *hot*, so /aww will return hottest threads from the past day.
 
@@ -597,7 +596,8 @@ Note: Default option is *hot*, so /aww will return hottest threads from the past
     /popular - most popular threads from all subreddits.
 
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
-`;
+
+Note: "aww top" kind of format is no longer supported due to issues while browsing in groups`;
     logger.info("User(" + msg.from.username + "): " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
@@ -808,14 +808,20 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       msg.text = msg.text.slice(1, msg.text.length);
     }
     logger.info("User(" + msg.from.username + "): " + msg.text);
-    client.get(msg.chat.id, function(err,res) {
-      var subs = res.toLowerCase().split("+");
-      console.log(subs);
-      var i;
-      subs.forEach ( subs => {
-        if(subs !== '')
-          return bot.sendMessage(msg.chat.id,`r/${subs}\n`)
-      });
+    client.get(msg.chat.id, function (err, res) {
+      if (!res) {
+        console.log(err)
+        return bot.sendMessage(msg.chat.id, "No subscriptions found")
+      }
+      else if (res) {
+        var subs = res.toLowerCase().split("+");
+        console.log(subs);
+        var i;
+        subs.forEach(subs => {
+          if (subs !== '')
+            return bot.sendMessage(msg.chat.id, `r/${subs}\n`)
+        });
+      }
     });
   }
 
@@ -825,59 +831,61 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
     if (msg.text.includes("@RedditBrowserBot")) {
       if (msg.text.includes("/")) {
         msg.text = msg.text.slice(1, msg.text.length);
-      }
-      logger.info("User(" + msg.from.username + "): " + msg.text);
-      var [subreddit, option] = msg.text.toLowerCase().split("@");
-      var [mention, option1] = option.toLowerCase().split(" ");
-      var option = option1;
-      skips = 0;
-      logger.info("User(" + msg.from.username + "): " + msg.text);
+        logger.info("User(" + msg.from.username + "): " + msg.text);
+        var [subreddit, option] = msg.text.toLowerCase().split("@");
+        var [mention, option1] = option.toLowerCase().split(" ");
+        var option = option1;
+        skips = 0;
+        logger.info("User(" + msg.from.username + "): " + msg.text);
 
-      const userId = `id_${msg.chat.id}`;
-      const messageId = msg.chat.id;
-      //const [subreddit, option] = msg.text.toLowerCase().split(" ");
-      const postNum = 0;
-      updateUser(userId, subreddit, option, postNum);
-      sendRedditPost(messageId, subreddit, option, postNum);
-    } else {
+        const userId = `id_${msg.chat.id}`;
+        const messageId = msg.chat.id;
+        //const [subreddit, option] = msg.text.toLowerCase().split(" ");
+        const postNum = 0;
+        updateUser(userId, subreddit, option, postNum);
+        sendRedditPost(messageId, subreddit, option, postNum);
+      }
+    } 
+    else {
       //for PMs
       skips = 0;
       logger.info("User(" + msg.from.username + "): " + msg.text);
 
       if (msg.text.includes("/")) {
         msg.text = msg.text.slice(1, msg.text.length);
-      }
-      const userId = `id_${msg.chat.id}`;
-      const messageId = msg.chat.id;
-      var postNum = 0;
-      const multiLimit = 5;
-      if(/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)){
-        var i;
-        //console.log("yes multi")
-        const [subreddit, option, numberPosts] = msg.text.toLowerCase().split(" ");
-        if(numberPosts <= multiLimit) {
-          for(i = 0; i < numberPosts; i++){
-            sendRedditPost(messageId, subreddit, option, postNum);
-            postNum = postNum + 1;
+
+        const userId = `id_${msg.chat.id}`;
+        const messageId = msg.chat.id;
+        var postNum = 0;
+        const multiLimit = 5;
+        if (/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)) {
+          var i;
+          //console.log("yes multi")
+          const [subreddit, option, numberPosts] = msg.text.toLowerCase().split(" ");
+          if (numberPosts <= multiLimit) {
+            for (i = 0; i < numberPosts; i++) {
+              sendRedditPost(messageId, subreddit, option, postNum);
+              postNum = postNum + 1;
+            }
           }
+          else {
+            return bot.sendMessage(messageId, `_ERROR: Sorry, we can't show more than ${multiLimit} threads in Multi Mode._`, { parse });
+          }
+          //var numUserId = userId.replace(/[^0-9]/g,'');
         }
         else {
-          return bot.sendMessage(messageId, `_ERROR: Sorry, we can't show more than ${multiLimit} threads in Multi Mode._`, {parse});
+          //console.log("no multi")
+          const [subreddit, option] = msg.text.toLowerCase().split(" ");
+          //console.log(userId+subreddit+option+postNum);
+          updateUser(userId, subreddit, option, postNum);
+          sendRedditPost(messageId, subreddit, option, postNum);
         }
-        //var numUserId = userId.replace(/[^0-9]/g,'');
+        //console.log("main logic");
+        //console.log("message info="+msg)
+        //bot.sendMessage(messageId,"Multi Mode ON! [Go to Top](https://t.me/c/1155726669/"+msg.message_id+")", {parse})
+        //updateUser(userId, subreddit, option, postNum);
+        //sendRedditPost(messageId, subreddit, option, postNum);
       }
-      else{
-        //console.log("no multi")
-        const [subreddit, option] = msg.text.toLowerCase().split(" ");
-        //console.log(userId+subreddit+option+postNum);
-        updateUser(userId, subreddit, option, postNum);
-        sendRedditPost(messageId, subreddit, option, postNum);
-      }
-      //console.log("main logic");
-      //console.log("message info="+msg)
-      //bot.sendMessage(messageId,"Multi Mode ON! [Go to Top](https://t.me/c/1155726669/"+msg.message_id+")", {parse})
-      //updateUser(userId, subreddit, option, postNum);
-      //sendRedditPost(messageId, subreddit, option, postNum);
     }
   }
 });
