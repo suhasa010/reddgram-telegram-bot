@@ -618,8 +618,18 @@ bot.on("text", msg => {
       logger.info("User: " + msg.text);
       return bot.sendMessage(msg.chat.id, message, { parse });
   }
+  else if (
+    msg.text === "/helpsubs" ||
+    msg.text === "/helpsubs@RedditBrowserBot"
+  ) {
+      skips = 0;
+      const message = subscriptions;
+      logger.info("User: " + msg.text);
+      return bot.sendMessage(msg.chat.id, message, { parse });
+  }
   
-  else if (msg.text.includes('/subscribe')) {
+  else if (/\/sub[scribe]* [a-zA-Z0-9]*$/.test(msg.text)) 
+  {
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
@@ -650,7 +660,7 @@ bot.on("text", msg => {
       }
     });
   }
-  else if (msg.text.includes('/unsubscribe')) {
+  else if (/\/unsub[scribe]* [a-zA-Z0-9]*$/.test(msg.text))  {
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
@@ -684,8 +694,8 @@ bot.on("text", msg => {
           client.set(msg.chat.id, subs, function (err, res) {
             if(err)
               console.log(err)
-            if(!subs)
-              return bot.sendMessage(msg.chat.id, "There are no subscriptions to be unsubscribed!")
+            //if(!subs.text.includes(subreddit))
+            //  return bot.sendMessage(msg.chat.id, "You haven't subscribed to that subreddit yet. use /subscribe <subreddit_name> to subscribe.")
             else if (subs)
               return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit}!`)
             });

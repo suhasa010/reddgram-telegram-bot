@@ -186,3 +186,19 @@ Currently this mode has some limitations;
 
 There may be some bugs since this feature is still in beta, please report them over at @reddgramIssues.
 `;
+
+module.exports = subscriptions = `You can now subscribe to any of the subreddits to receive regular posts in your PM or in your groups.
+
+All you have to do is -
+
+/sub memes
+
+replace memes with any of your favourite subreddits.
+
+Unsubscribe using -
+
+/unsub memes
+
+You can subscribe to multiple subreddits by repeating the same or by giving \`/sub jokes+memes+gifs\` and you'll receive one message every 2 hours with a post from any of your subscribed subreddits.
+
+You can view your subscriptions any time by sending /subscriptions.`;
