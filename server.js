@@ -123,6 +123,8 @@ function updateUser(userId, subreddit, option, postNum) {
   db[userId] = { subreddit, option, postNum };
 }
 
+
+
 function sendRedditPost(messageId, subreddit, option, postNum) {
   const options = getOptions(option, rLimit);
   var start = new Date();
@@ -172,7 +174,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             bot.inlineButton("⏩ Next", { callback: "callback_query_next" })
           ]
         ]);
-
+        
         // if post is an image or if it's a gif or a link
         if (
           /\.(jpe?g|png)$/.test(redditPost.url) ||
@@ -183,7 +185,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "preview.redd.it"
         ) {
           // sendPlsWait(messageId);
-          bot.sendChatAction(messageId, "upload_photo");
+          //bot.sendChatAction(messageId, "upload_photo");
           return sendImagePost(messageId, redditPost, markup);
         }
         //gif
@@ -191,7 +193,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.preview &&
           redditPost.preview.images[0].variants.mp4
         ) {
-          bot.sendChatAction(messageId, "upload_video");
+          //bot.sendChatAction(messageId, "upload_video");
           // sendPlsWait(messageId);
           sendGifPost(messageId, redditPost, markup);
         }
@@ -203,7 +205,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "i.redd.it" ||
           redditPost.domain === "gfycat.com"
         ) {
-          bot.sendChatAction(messageId, "upload_video");
+          //bot.sendChatAction(messageId, "upload_video");
           return sendVideoPost(messageId, redditPost, markup);
         }
         //link
@@ -213,12 +215,12 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           ) &&
           !redditPost.selftext
         ) {
-          bot.sendChatAction(messageId, "typing");
+          //bot.sendChatAction(messageId, "typing");
           return sendLinkPost(messageId, redditPost, markup);
         }
         //text
         else {
-          bot.sendChatAction(messageId, "typing");
+          //bot.sendChatAction(messageId, "typing");
           return sendMessagePost(messageId, redditPost, markup);
         }
 
@@ -228,6 +230,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       }
     }
   );
+  logger.info("http request completed")
 }
 
 // options
@@ -303,14 +306,14 @@ function sendImagePost(messageId, redditPost, markup) {
     decimals: 0
   });
   timeago = timeago.replace(/\s/g, "");
-
+  
   var { tld, domain, sub } = parser(redditPost.url);
   //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
   var websitename = domain.split(".");
   if (websitename[0] === "redd")
     var site = `${websitename[0]}${websitename[1]}`;
   else var site = websitename[0];
-
+  
   if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
@@ -324,7 +327,7 @@ function sendImagePost(messageId, redditPost, markup) {
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
-
+  logger.info("about to send the post to telegram")
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
   return bot.sendMessage(messageId, caption, { parse, markup });
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
@@ -604,10 +607,22 @@ bot.on("text", msg => {
     msg.text === "/contact" ||
     msg.text === "/contact@RedditBrowserBot"
   ) {
-      skips = 0;
-      const message = contactDev;
-      logger.info("User: " + msg.text);
-      return bot.sendMessage(msg.chat.id, message, { parse });
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("Join the official Reddgram group", {
+          url: "https://t.me/reddgramissues"
+        })
+      ],
+      [
+        bot.inlineButton("Projects Channel", {
+        url: "https://t.me/ssjprojects"
+        })
+      ]
+    ]);
+    skips = 0;
+    const message = contactDev;
+    logger.info("User: " + msg.text);
+    return bot.sendMessage(msg.chat.id, message, { parse, markup });
   }
   else if (
     msg.text === "/multi" ||
@@ -628,7 +643,7 @@ bot.on("text", msg => {
       return bot.sendMessage(msg.chat.id, message, { parse });
   }
   
-  else if (/\/sub[scribe]* [a-zA-Z0-9]*$/.test(msg.text)) 
+  else if (/\/sub[scribe]* [a-zA-Z0-9+_]*$/.test(msg.text)) 
   {
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
@@ -652,15 +667,24 @@ bot.on("text", msg => {
       else if (res) {
         var subs = res.toLowerCase().split("+");
         console.log(subs);
+        var subscriptions = "*Your subscriptions:*\n\n";
         var i;
         subs.forEach(subs => {
           if (subs !== '')
-            return bot.sendMessage(msg.chat.id, `r‏/${subs}\n`)
+            subscriptions +=`r‏/${subs}\n\n`
         });
+        const markup = bot.inlineKeyboard([
+          [
+            bot.inlineButton("Unsubscribe all", {
+              callback: "callback_query_unsuball"
+            })
+          ]
+        ]);
+        return bot.sendMessage(msg.chat.id, subscriptions, {parse, markup});
       }
     });
   }
-  else if (/\/unsub[scribe]* [a-zA-Z0-9]*$/.test(msg.text))  {
+  else if (/\/unsub[scribe]* [a-zA-Z0-9+_]*$/.test(msg.text))  {
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
@@ -737,8 +761,10 @@ bot.on("text", msg => {
         const messageId = msg.chat.id;
         var postNum = 0;
         const multiLimit = 5;
+        logger.info("before processing regex")
         if (/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)) {
           var i;
+
           //multi mode
           const [subreddit, option, numberPosts] = msg.text.toLowerCase().split(" ");
           if (numberPosts <= multiLimit) {
@@ -754,7 +780,8 @@ bot.on("text", msg => {
           //var numUserId = userId.replace(/[^0-9]/g,'');
         }
         else {
-          //console.log("no multi")
+          logger.info("after processing regex")
+          //normal browsing
           const [subreddit, option] = msg.text.toLowerCase().split(" ");
           //console.log(userId+subreddit+option+postNum);
           updateUser(userId, subreddit, option, postNum);
@@ -820,6 +847,19 @@ bot.on("callbackQuery", async msg => {
   }
 });
 
+bot.on("callbackQuery", async msg => {
+  if (msg.data === "callback_query_unsuball") {
+    client.set(msg.message.chat.id, '', function(err, res) {
+        if(err)
+          logger.error(err)
+        else
+          return bot.sendMessage(msg.message.chat.id, "Successfully unsubscribed from all subscriptions!")
+       
+    });
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
 var subPostNum = 0;
 setInterval( function() {
   //var chat;
@@ -849,6 +889,36 @@ setInterval( function() {
   subPostNum = subPostNum + 1;
   //console.log(chats)
 }, 7200 * 1000)
+
+//for Suhasa
+setInterval( function() {
+  //var chat;
+  client
+  .multi()
+  .keys("*")
+  .exec(function(err, replies) {
+    replies.forEach(function (reply, index) {
+      var chats = reply.toString().split(",")
+      chats.forEach(function(chat) {
+            //this is for testing subscriptions on myself
+            if (chat === "15024063")
+            {
+            client.get(chat, function(err, reply) {
+            const sub = reply;
+            option = "hot";
+            const userId = `id_${chat}`;
+            updateUser(userId, sub, option, subPostNum);
+            sendRedditPost(chat,sub,option,subPostNum)
+            console.log(chat+" "+ sub +" "+ option +" ")
+        });
+            }
+      });   
+    });
+  });
+  console.log("postnumber " +subPostNum)
+  subPostNum = subPostNum + 1;
+  //console.log(chats)
+}, 600 * 1000)
 
 //reset hot Posts traversing index to 0 after 24 hours
 setInterval( function() {

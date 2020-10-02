@@ -3,7 +3,7 @@ module.exports = helpMessage = `*Welcome to Reddgram Bot*
 Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
 
 _New features:_
-*Subscriptions* -- Subscribe to any subreddit by giving \`\/subscribe <subreddit_name>\`. More details in @ssjprojects. 
+*Subscriptions* -- /helpsubs to get started. Subscribe to any subreddit by using \`\/sub <subreddit_name>\`. 
 *Multi Mode* -- /multi to get started on how to browse multiple threads at a time.
 *Emoji Mode* -- /emoji _A new way to browse subreddits_.
 *Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
@@ -11,11 +11,11 @@ _New features:_
 *How to use Reddgram:*
 
 1. *Format:* 
-          *\/subreddit_name  [sort_option]\*
+          \`\/subreddit_name  [sort_option]\` (long press to copy)
 
       a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
 
-      b. (optional) *sort_option* can be any of the these /options. 
+      b. (optional)*sort_option* can be any of the /options. 
 
 For eg. \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
@@ -29,7 +29,9 @@ Note: Default option is *hot*, so /aww will return hottest threads from the past
 
 _💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
 
-Note: "aww top" kind of format is no longer supported due to issues while browsing in groups`;
+_Note: "aww top" kind of format is no longer supported due to issues while browsing in groups_
+
+✉️ In case of issues, /contact the developer`;
 
 module.exports = listSubs = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
   (and of course you can customize the *sort_option* with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
@@ -105,7 +107,6 @@ module.exports = listSubs = `Here is a list of most popular subreddits on Reddit
   34. /nosleep
 
   35. /woahdude
-
 `;
 
 module.exports = emojiMode = `Welcome to a whole new way to browse Reddit: *Emoji Mode* is here.
@@ -165,8 +166,8 @@ You can customize the *sort_option* with any of the following:
 For eg. Try entering  \`/pics new\`.
     `;
 
-module.exports = contactDev = `You can contact @suhasa010 or drop a message in @reddgramIssues if you face any issues or have a feature request. @ssjprojects for updates related to the bot and for more info on dev's other projects.
-`;
+module.exports = contactDev = `Contact @suhasa010 or drop a message in the _Official Reddgram Group_ if you face any issues or have a feature request.
+Join the _Projects Channel_ for updates related to the bot and for more info on my other projects.`;
 
 module.exports = multiMode = `*Multi Mode* is finally here! (beta feature)
       
