@@ -800,7 +800,7 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
     logger.info("User(" + msg.from.username + "): " + msg.text);
     var [subscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
     client.APPEND(msg.chat.id,`${subreddit}+`, function(err,res) {
-      return bot.sendMessage(msg.chat.id, `Successfully subscribed to r/${subreddit}!`)
+      return bot.sendMessage(msg.chat.id, `Successfully subscribed to r‏/${subreddit}!`)
     });
   }
   else if (msg.text.includes('/subscriptions')) {
@@ -819,8 +819,51 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
         var i;
         subs.forEach(subs => {
           if (subs !== '')
-            return bot.sendMessage(msg.chat.id, `r/${subs}\n`)
+            return bot.sendMessage(msg.chat.id, `r‏/${subs}\n`)
         });
+      }
+    });
+  }
+  else if (msg.text.includes('/unsubscribe')) {
+    if (msg.text.includes("/")) {
+      msg.text = msg.text.slice(1, msg.text.length);
+    }
+    var subs;
+    logger.info("User(" + msg.from.username + "): " + msg.text);
+    var [unsubscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
+
+    client.get(msg.chat.id, function (err, res) {
+      if (!res) {
+        console.log(err)
+        return bot.sendMessage(msg.chat.id, "No subscriptions found")
+      }
+      else if (res) {
+        subs = res.toLowerCase().split("+");
+        console.log(subs);
+        var i;
+        //subs.forEach(subs => 
+        {
+          //if (subs === subreddit) 
+          {
+            for (var i = 0; i < subs.length - 1; i++) {
+              if (subs[i] == subreddit) {
+                subs.splice(i, 1);
+                console.log(subs)
+              }
+            }
+            console.log("\nafter removing " + subreddit + ", subs are" + subs)
+          }
+          subs = subs.join("+")
+          console.log("after removing jokes = " + subs)
+          client.set(msg.chat.id, subs, function (err, res) {
+            if(err)
+              console.log(err)
+            if(!subs)
+              return bot.sendMessage(msg.chat.id, "There are no subscriptions to be unsubscribed!")
+            else if (subs)
+              return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit}!`)
+            });
+        }
       }
     });
   }
@@ -940,6 +983,7 @@ bot.on("callbackQuery", async msg => {
   }
 });
 
+var subPostNum = 0;
 setInterval( function() {
   //var chat;
   client
@@ -949,17 +993,28 @@ setInterval( function() {
     replies.forEach(function (reply, index) {
       var chats = reply.toString().split(",")
       chats.forEach(function(chat) {
+            //this is for testing subscriptions on myself
+            //if (chat === "15024063")
+            {
             client.get(chat, function(err, reply) {
             const sub = reply;
             option = "hot";
-            sendRedditPost(chat,sub,option,0)
+            sendRedditPost(chat,sub,option,subPostNum)
             console.log(chat+" "+ sub +" "+ option +" ")
         });
+            }
       });   
     });
   });
+  console.log("postnumber " +subPostNum)
+  subPostNum = subPostNum + 1;
   //console.log(chats)
 }, 7200 * 1000)
+
+//reset hot Posts traversing index to 0 after 24 hours
+setInterval( function() {
+  subPostNum = 0;
+}, 86400 * 100)
 
 /*function fetchThreads(query, messageId, postNum) {
  
