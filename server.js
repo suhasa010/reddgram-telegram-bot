@@ -897,16 +897,17 @@ For eg. Try entering  \`pics new\`  (or) \`/pics new\`.
       if (msg.text.includes("/")) {
         msg.text = msg.text.slice(1, msg.text.length);
 
-        const userId = `id_${msg.chat.id}`;
+        var userId = `id_${msg.chat.id}`;
         const messageId = msg.chat.id;
         var postNum = 0;
         const multiLimit = 5;
         if (/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)) {
           var i;
-          //console.log("yes multi")
+          //multi mode
           const [subreddit, option, numberPosts] = msg.text.toLowerCase().split(" ");
           if (numberPosts <= multiLimit) {
             for (i = 0; i < numberPosts; i++) {
+              updateUser(userId, subreddit, option, postNum);
               sendRedditPost(messageId, subreddit, option, postNum);
               postNum = postNum + 1;
             }
@@ -999,6 +1000,8 @@ setInterval( function() {
             client.get(chat, function(err, reply) {
             const sub = reply;
             option = "hot";
+            const userId = `id_${chat}`;
+            updateUser(userId, sub, option, subPostNum);
             sendRedditPost(chat,sub,option,subPostNum)
             console.log(chat+" "+ sub +" "+ option +" ")
         });
