@@ -17,11 +17,12 @@ setInterval(() => {
 const TeleBot = require("telebot");
 const fs = require("fs");
 const request = require("request");
-
+require('dotenv').config();
 const bot = new TeleBot(process.env.BOT_TOKEN);
 
 bot.on("text", msg => {
-  bot.sendMessage(msg.chat.id,"Bot taken down for maintenance. Any updates about the same will be posted on @reddgramIssues. Thanks for the cooperation.")
+  bot.sendMessage(msg.chat.id,"Reddit seems to be down at the moment. Stay tuned for more updates.\nCheck the status here: https://downdetector.com/status/reddit/")
+  //Bot taken down for maintenance. Any updates about the same will be posted on @reddgramIssues. Thanks for the cooperation.")
 });
        
 bot.connect()

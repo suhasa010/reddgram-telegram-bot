@@ -131,8 +131,10 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
   request(
     { url: `http://www.reddit.com/r/${subreddit}/${options}`, json: true },
     function(error, response, body) {
+      console.log(error)
       // check if response was successful
       if (!error && response.statusCode === 200) {
+        
         // send error message if the bot encountered one
         if (body.hasOwnProperty("error") || body.data.children.length < 1) {
           return sendErrorMsg(messageId);
@@ -168,10 +170,10 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             bot.inlineButton("💬 Comments", {
               url: `https://www.reddit.com${redditPost.permalink}`
             }),
-            bot.inlineButton("↩️ Share", {
+            bot.inlineButton("↗️ Share", {
               url: `https://t.me/share/url?text=%0D%0D${redditPost.title}\n\nShared via @RedditBrowserBot&url=https%3A//www.reddit.com${redditPost.permalink}`
             }),
-            bot.inlineButton("⏩ Next", { callback: "callback_query_next" })
+            bot.inlineButton("⏭ Next", { callback: "callback_query_next" })
           ]
         ]);
         
@@ -659,6 +661,7 @@ bot.on("text", msg => {
       msg.text = msg.text.slice(1, msg.text.length);
     }
     logger.info("User(" + msg.from.username + "): " + msg.text);
+    //userId = msg.from.id;
     client.get(msg.chat.id, function (err, res) {
       if (!res) {
         console.log(err)
@@ -667,15 +670,24 @@ bot.on("text", msg => {
       else if (res) {
         var subs = res.toLowerCase().split("+");
         console.log(subs);
-        var subscriptions = "*Your subscriptions:*\n\n";
-        var i;
-        subs.forEach(subs => {
-          if (subs !== '')
-            subscriptions +=`r‏/${subs}\n\n`
-        });
+        var subscriptions = `*📢 Your subscriptions:*\n\n`;
+        var i,num = -1 ;
+        subs.forEach( (subs) => {
+            if (subs !== '') {
+              try {
+                subscriptions += `r‏/${subs}\n\n`;
+              }
+              catch(err) {
+                console.log(err)
+              }
+              console.log(subscriptions);
+            }
+            num++;
+          }
+        );
         const markup = bot.inlineKeyboard([
           [
-            bot.inlineButton("Unsubscribe all", {
+            bot.inlineButton(`Unsubscribe ${num} sub(s)`, {
               callback: "callback_query_unsuball"
             })
           ]
@@ -699,7 +711,7 @@ bot.on("text", msg => {
       }
       else if (res) {
         subs = res.toLowerCase().split("+");
-        console.log(subs);
+        //console.log(subs);
         var i;
         //subs.forEach(subs => 
         {
@@ -708,16 +720,16 @@ bot.on("text", msg => {
             for (var i = 0; i < subs.length - 1; i++) {
               if (subs[i] == subreddit) {
                 subs.splice(i, 1);
-                console.log(subs)
+                //console.log(subs)
               }
             }
-            console.log("\nafter removing " + subreddit + ", subs are" + subs)
+            //console.log("\nafter removing " + subreddit + ", subs are" + subs)
           }
           subs = subs.join("+")
-          console.log("after removing jokes = " + subs)
+          //console.log("after removing jokes = " + subs)
           client.set(msg.chat.id, subs, function (err, res) {
             if(err)
-              console.log(err)
+              logger.error(err)
             //if(!subs.text.includes(subreddit))
             //  return bot.sendMessage(msg.chat.id, "You haven't subscribed to that subreddit yet. use /subscribe <subreddit_name> to subscribe.")
             else if (subs)
@@ -761,7 +773,6 @@ bot.on("text", msg => {
         const messageId = msg.chat.id;
         var postNum = 0;
         const multiLimit = 5;
-        logger.info("before processing regex")
         if (/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)) {
           var i;
 
@@ -780,7 +791,6 @@ bot.on("text", msg => {
           //var numUserId = userId.replace(/[^0-9]/g,'');
         }
         else {
-          logger.info("after processing regex")
           //normal browsing
           const [subreddit, option] = msg.text.toLowerCase().split(" ");
           //console.log(userId+subreddit+option+postNum);
@@ -797,11 +807,13 @@ bot.on("text", msg => {
   }
 });
 
+var userId;
+
 bot.on("callbackQuery", async msg => {
   if (msg.data === "callback_query_next") {
     //console.log("test")
     const parse = "Markdown";
-    const userId = `id_${msg.message.chat.id}`;
+    userId = `id_${msg.message.chat.id}`;
     const messageId = msg.message.chat.id;
     //console.log(msg.message.chat.id)
     logger.info("User: clicked next");
@@ -848,82 +860,91 @@ bot.on("callbackQuery", async msg => {
 });
 
 bot.on("callbackQuery", async msg => {
-  if (msg.data === "callback_query_unsuball") {
+  if (msg.data === "callback_query_unsuball") { 
+    console.log(userId+" "+msg.from.id)
+    //if (userId === msg.from.id) {
     client.set(msg.message.chat.id, '', function(err, res) {
         if(err)
           logger.error(err)
-        else
-          return bot.sendMessage(msg.message.chat.id, "Successfully unsubscribed from all subscriptions!")
-       
+        else {
+          chatId = msg.message.chat.id;
+          messageId = msg.message.message_id;
+          console.log(" " + msg.from.id+" "+ chatId+" "+messageId)
+          return bot.editMessageText( {chatId, messageId}, "Successfully unsubscribed from all subscriptions!", {parseMode: 'html'})
+        }
     });
   }
   await bot.answerCallbackQuery(msg.id);
+//}
 });
 
 var subPostNum = 0;
-setInterval( function() {
+setInterval(function () {
   //var chat;
   client
-  .multi()
-  .keys("*")
-  .exec(function(err, replies) {
-    replies.forEach(function (reply, index) {
-      var chats = reply.toString().split(",")
-      chats.forEach(function(chat) {
-            //this is for testing subscriptions on myself
-            //if (chat === "15024063")
-            {
-            client.get(chat, function(err, reply) {
-            const sub = reply;
-            option = "hot";
-            const userId = `id_${chat}`;
-            updateUser(userId, sub, option, subPostNum);
-            sendRedditPost(chat,sub,option,subPostNum)
-            console.log(chat+" "+ sub +" "+ option +" ")
+    .multi()
+    .keys("*")
+    .exec(function (err, replies) {
+      replies.forEach(function (reply, index) {
+        var chats = reply.toString().split(",")
+        chats.forEach(function (chat) {
+          //this is for testing subscriptions on myself
+          //if (chat === "15024063")
+          {
+            client.get(chat, function (err, reply) {
+              if (reply !== "") {
+                const sub = reply;
+                option = "hot";
+                const userId = `id_${chat}`;
+                updateUser(userId, sub, option, subPostNum);
+                sendRedditPost(chat, sub, option, subPostNum)
+                console.log(chat + " " + sub + " " + option + " ")
+              }
+            });
+          }
         });
-            }
-      });   
+      });
     });
-  });
-  console.log("postnumber " +subPostNum)
+  console.log("postnumber " + subPostNum)
   subPostNum = subPostNum + 1;
   //console.log(chats)
 }, 7200 * 1000)
 
 //for Suhasa
-setInterval( function() {
+setInterval(function () {
   //var chat;
   client
-  .multi()
-  .keys("*")
-  .exec(function(err, replies) {
-    replies.forEach(function (reply, index) {
-      var chats = reply.toString().split(",")
-      chats.forEach(function(chat) {
-            //this is for testing subscriptions on myself
-            if (chat === "15024063")
-            {
-            client.get(chat, function(err, reply) {
-            const sub = reply;
-            option = "hot";
-            const userId = `id_${chat}`;
-            updateUser(userId, sub, option, subPostNum);
-            sendRedditPost(chat,sub,option,subPostNum)
-            console.log(chat+" "+ sub +" "+ option +" ")
+    .multi()
+    .keys("*")
+    .exec(function (err, replies) {
+      replies.forEach(function (reply, index) {
+        var chats = reply.toString().split(",")
+        chats.forEach(function (chat) {
+          //this is for testing subscriptions on myself
+          if (chat === "15024063") {
+            client.get(chat, function (err, reply) {
+              if (reply !== "") {
+                const sub = reply;
+                option = "hot";
+                const userId = `id_${chat}`;
+                updateUser(userId, sub, option, subPostNum);
+                sendRedditPost(chat, sub, option, subPostNum)
+                console.log(chat + " " + sub + " " + option + " ")
+              }
+            });
+          }
         });
-            }
-      });   
+      });
     });
-  });
-  console.log("postnumber " +subPostNum)
+  console.log("postnumber " + subPostNum)
   subPostNum = subPostNum + 1;
   //console.log(chats)
 }, 600 * 1000)
 
-//reset hot Posts traversing index to 0 after 24 hours
+//reset hot Posts traversing index to 0 after 12 hours
 setInterval( function() {
   subPostNum = 0;
-}, 86400 * 100)
+}, 43200 * 100)
 
 /*function fetchThreads(query, messageId, postNum) {
  
