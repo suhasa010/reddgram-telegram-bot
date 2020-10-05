@@ -232,7 +232,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       }
     }
   );
-  logger.info("http request completed")
+  //logger.info("http request completed")
 }
 
 // options
@@ -611,7 +611,7 @@ bot.on("text", msg => {
   ) {
     const markup = bot.inlineKeyboard([
       [
-        bot.inlineButton("Join the official Reddgram group", {
+        bot.inlineButton("Join the Official Reddgram group", {
           url: "https://t.me/reddgramissues"
         })
       ],
@@ -644,19 +644,42 @@ bot.on("text", msg => {
       logger.info("User: " + msg.text);
       return bot.sendMessage(msg.chat.id, message, { parse });
   }
-  
-  else if (/\/sub[scribe]* [a-zA-Z0-9+_]*$/.test(msg.text)) 
-  {
-    if (msg.text.includes("/")) {
-      msg.text = msg.text.slice(1, msg.text.length);
+  else if (
+    msg.text === "/import" ||
+    msg.text === "/import@RedditBrowserBot"
+  ) {
+    return bot.sendMessage(msg.chat.id, "https://telegra.ph/Tutorial-How-to-import-your-existing-subreddits-on-redditcom-to-Reddgram-bot-on-Telegram-10-04");
+  }
+  else if (/\/sub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text) || /\/import[@RedditBrowserBot]* [https://old.reddit.com/r/]+[a-zA-Z0-9_+]+$/.test(msg.text)) {
+    if (/\/import [https://old.reddit.com/r/]+[a-zA-Z0-9_+]+$/.test(msg.text)) {
+      var subreddit = msg.text.slice(33, msg.text.length);
+      console.log(subreddit)
+      bot.sendMessage(msg.chat.id, "Successfully imported subreddits from Reddit 🥳\nSee those here - /subscriptions")
     }
-    logger.info("User(" + msg.from.username + "): " + msg.text);
-    var [subscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
-    client.APPEND(msg.chat.id,`${subreddit}+`, function(err,res) {
-      return bot.sendMessage(msg.chat.id, `Successfully subscribed to r‏/${subreddit}!`)
+    else {
+      const parse = "Markdown";
+      //if (msg.text.includes("/")) {
+      msg.text = msg.text.slice(1, msg.text.length);
+      console.log("after slice: " + msg.text)
+      //}
+      logger.info("User(" + msg.from.username + "): " + msg.text);
+      var [subscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
+      console.log("sub = " + subreddit)
+    }
+    client.get(msg.chat.id, function (err, res) {
+      if (res.includes(subreddit)) {
+        return bot.sendMessage(msg.chat.id, `Duh! You are already subscribed to r‏/${subreddit} 😏\nCheck /subscriptions maybe?`, { parse })
+      }
+      else {
+        client.APPEND(msg.chat.id, `${subreddit}+`, function (err, res) {
+          return bot.sendMessage(msg.chat.id, `Yay! Successfully subscribed to r‏/${subreddit} 🥳\nSee it here - /subscriptions`, { parse })
+        });
+      }
     });
+
   }
   else if (msg.text.includes('/subscriptions')) {
+    const parse = "Markdown";
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
@@ -665,13 +688,14 @@ bot.on("text", msg => {
     client.get(msg.chat.id, function (err, res) {
       if (!res) {
         console.log(err)
-        return bot.sendMessage(msg.chat.id, "No subscriptions found")
+        return bot.sendMessage(msg.chat.id, noSubs , {parse})
       }
       else if (res) {
         var subs = res.toLowerCase().split("+");
         console.log(subs);
-        var subscriptions = `*📢 Your subscriptions:*\n\n`;
+        var subscriptions = `<b>Your subscriptions 📢</b>\n\n`;
         var i,num = -1 ;
+        const parse = "html";
         subs.forEach( (subs) => {
             if (subs !== '') {
               try {
@@ -696,7 +720,8 @@ bot.on("text", msg => {
       }
     });
   }
-  else if (/\/unsub[scribe]* [a-zA-Z0-9+_]*$/.test(msg.text))  {
+  else if (/\/unsub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text))  {
+    const parse = "Markdown"
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
@@ -705,11 +730,8 @@ bot.on("text", msg => {
     var [unsubscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
 
     client.get(msg.chat.id, function (err, res) {
-      if (!res) {
-        console.log(err)
-        return bot.sendMessage(msg.chat.id, "No subscriptions found")
-      }
-      else if (res) {
+      console.log(res)
+      if (res) {
         subs = res.toLowerCase().split("+");
         //console.log(subs);
         var i;
@@ -732,13 +754,24 @@ bot.on("text", msg => {
               logger.error(err)
             //if(!subs.text.includes(subreddit))
             //  return bot.sendMessage(msg.chat.id, "You haven't subscribed to that subreddit yet. use /subscribe <subreddit_name> to subscribe.")
-            else if (subs)
-              return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit}!`)
+            else //if (subs)
+              return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit} 👍🏼`)
             });
         }
       }
+      else if(!(res.includes(subreddit)))
+      {
+        return bot.sendMessage(msg.chat.id, `You aren't subscribed to r‏/${subreddit} 😏\nSee your /subscriptions.`, {parse})
+      }
+      else if (!res) {
+        console.log(err)
+        return bot.sendMessage(msg.chat.id, noSubs, {parse})
+      }
     });
   }
+  //else if() {
+
+  //}
 
   //core logic
   else {
@@ -860,22 +893,30 @@ bot.on("callbackQuery", async msg => {
 });
 
 bot.on("callbackQuery", async msg => {
-  if (msg.data === "callback_query_unsuball") { 
-    console.log(userId+" "+msg.from.id)
-    //if (userId === msg.from.id) {
-    client.set(msg.message.chat.id, '', function(err, res) {
-        if(err)
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from"+msg.from.id);
+  if (msg.data === "callback_query_unsuball") {
+    console.log(userId + " " + msg.from.id)
+    //if (!(/^-[0-9]+$/.test(msg.message.chat.id)) || (member.status == 'administrator')) {
+      client.set(msg.message.chat.id, '', function (err, res) {
+        if (err)
           logger.error(err)
         else {
           chatId = msg.message.chat.id;
           messageId = msg.message.message_id;
-          console.log(" " + msg.from.id+" "+ chatId+" "+messageId)
-          return bot.editMessageText( {chatId, messageId}, "Successfully unsubscribed from all subscriptions!", {parseMode: 'html'})
+          console.log(" " + msg.from.id + " " + chatId + " " + messageId)
+          return bot.editMessageText({ chatId, messageId }, "Successfully unsubscribed from all subscriptions 👻\nTo subscribe again, send \`/sub subreddit_name\`", { parseMode: 'Markdown' })
         }
-    });
+      });
+    //}
+    //else
+      //await bot.answerCallbackQuery(msg.id,'You need to be an admin to unsubscribe!')
   }
   await bot.answerCallbackQuery(msg.id);
-//}
+  //}
 });
 
 var subPostNum = 0;

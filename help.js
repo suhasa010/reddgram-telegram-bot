@@ -1,12 +1,14 @@
-module.exports = helpMessage = `*Welcome to Reddgram Bot*
+module.exports = helpMessage = `_Hey there! 👋
 
-Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!
+I am Reddgram bot 🤖
+
+I am here to help you browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!_
 
 _New features:_
-*Subscriptions* -- /helpsubs to get started. Subscribe to any subreddit by using \`\/sub <subreddit_name>\`. 
+*Subscriptions* -- /helpsubs to get started. Subscribe to any subreddit by using \`\/sub subreddit_name\` and unsubscribe using \`/unsub subreddit_name\`. 
 *Multi Mode* -- /multi to get started on how to browse multiple threads at a time.
 *Emoji Mode* -- /emoji _A new way to browse subreddits_.
-*Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` (long press to copy)
+*Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\`
 
 *How to use Reddgram:*
 
@@ -15,11 +17,11 @@ _New features:_
 
       a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
 
-      b. (optional)*sort_option* can be any of the /options. 
+      b. (optional) *sort_option* can be any of the /options. 
 
 For eg. \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
-Note: Default option is *hot*, so /aww will return hottest threads from the past day.
+_Note: Default option is "hot", so /aww will return hottest threads from the past day._
 
 2. /random - random threads from all subreddits
 
@@ -27,7 +29,7 @@ Note: Default option is *hot*, so /aww will return hottest threads from the past
 
     /popular - most popular threads from all subreddits.
 
-_💡Tip for mobile users: Touch and hold on any of the above commands to be able to edit and send with a sort option_
+_💡Tip for mobile users: Long press on any of the above commands to be able to edit and send with a sort option_
 
 _Note: "aww top" kind of format is no longer supported due to issues while browsing in groups_
 
@@ -181,9 +183,7 @@ Just send
 
 Currently this mode has some limitations;
 1. Max number of threads that can be fetched at a time is 5 (might change in the future).
-2. Next button is broken in Multi Mode. Send the usual commands for it to work as expected (Will be fixed later).
-3. This mode only works in PMs, so as to not flood a group with multiple messages (might change in the future).
-4. Currently you will have to scroll from bottom to top to be able to browse the fetched threads.
+2. You will have to scroll from bottom to top to be able to browse the fetched threads.
 
 There may be some bugs since this feature is still in beta, please report them over at @reddgramIssues.
 `;
@@ -192,14 +192,16 @@ module.exports = subscriptions = `You can now subscribe to any of the subreddits
 
 All you have to do is -
 
-/sub memes
+\`/sub memes\`
 
-replace memes with any of your favourite subreddits.
+replace _memes_ with any of your favourite subreddits.
 
 Unsubscribe using -
 
-/unsub memes
+\`/unsub memes\`
 
-You can subscribe to multiple subreddits by repeating the same or by giving \`/sub jokes+memes+gifs\` and you'll receive one message every 2 hours with a post from any of your subscribed subreddits.
+You can subscribe to multiple subreddits by repeating the same or by giving \`/sub jokes+memes+gifs\` and you'll receive one message every 2 hours with a post from any of your subscriptions.
 
 You can view your subscriptions any time by sending /subscriptions.`;
+
+module.exports = noSubs = `No subscriptions found 🧐\nTo subscribe, send \`/sub subreddit_name\``;
