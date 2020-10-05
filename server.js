@@ -667,13 +667,14 @@ bot.on("text", msg => {
       console.log("sub = " + subreddit)
     }
     client.get(msg.chat.id, function (err, res) {
-      if (res.includes(subreddit)) {
-        return bot.sendMessage(msg.chat.id, `Duh! You are already subscribed to r‏/${subreddit} 😏\nCheck /subscriptions maybe?`, { parse })
-      }
-      else {
+      console.log("id="+msg.chat.id+" result="+res)
+      if(!res) {
         client.APPEND(msg.chat.id, `${subreddit}+`, function (err, res) {
           return bot.sendMessage(msg.chat.id, `Yay! Successfully subscribed to r‏/${subreddit} 🥳\nSee it here - /subscriptions`, { parse })
         });
+      }
+      else if (res.includes(subreddit)) {
+        return bot.sendMessage(msg.chat.id, `Duh! You are already subscribed to r‏/${subreddit} 😏\nCheck /subscriptions maybe?`, { parse })
       }
     });
 
