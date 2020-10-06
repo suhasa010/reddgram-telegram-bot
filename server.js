@@ -879,7 +879,7 @@ bot.on("callbackQuery", async msg => {
 
     if (db[userId].hasOwnProperty("postNum")) {
       postNum = db[userId]["postNum"];
-      postNum++;
+      postNum= postNum + 2;
     }
 
     db[userId]["postNum"] = postNum;
@@ -948,9 +948,9 @@ setInterval(function () {
       });
     });
   console.log("postnumber " + subPostNum)
-  subPostNum = subPostNum + 1;
+  subPostNum = subPostNum + 3;
   //console.log(chats)
-}, 7200 * 1000)
+}, 10800 * 1000)
 
 //for Suhasa
 setInterval(function () {
@@ -981,7 +981,7 @@ setInterval(function () {
   console.log("postnumber " + subPostNum)
   subPostNum = subPostNum + 1;
   //console.log(chats)
-}, 600 * 1000)
+}, 1800 * 1000)
 
 //reset hot Posts traversing index to 0 after 12 hours
 setInterval( function() {
