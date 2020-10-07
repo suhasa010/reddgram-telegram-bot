@@ -200,7 +200,7 @@ Unsubscribe using -
 
 \`/unsub memes\`
 
-You can subscribe to multiple subreddits by repeating the same or by giving \`/sub jokes+memes+gifs\` and you'll receive one message every 2 hours with a post from any of your subscriptions.
+You can subscribe to multiple subreddits by repeating the same or by giving \`/sub jokes+memes+gifs\` and you'll receive one message every 3 hours with a post from any of your subscriptions.
 
 You can view your subscriptions any time by sending /subscriptions.`;
 
