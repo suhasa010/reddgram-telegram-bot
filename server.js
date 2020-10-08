@@ -113,6 +113,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 var bot = new TeleBot(BOT_TOKEN);
 var prettytime = require("prettytime");
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
+const { features } = require('process');
 
 
 let db = {};
@@ -578,8 +579,39 @@ bot.on("text", msg => {
     skips = 0;
     const message = helpMessage;
     logger.info("User(" + msg.from.username + "): " + msg.text);
-    return bot.sendMessage(msg.chat.id, message, { parse });
+    const markup = bot.inlineKeyboard(
+    [
+      [
+        bot.inlineButton("💫 Features", {callback: "callback_query_helpfeatures"}),
+
+        bot.inlineButton("📢 Subscriptions", { callback: "callback_query_helpsubs" }),
+
+        bot.inlineButton("*️⃣ Default Subs", { callback: "callback_query_inbuiltsubs" })
+      ],
+      [
+        bot.inlineButton("*️💣 Popular Subs", {callback: "callback_query_listsubs"}),
+
+        bot.inlineButton("😎 Emoji Mode", { callback: "callback_query_emojimode" }),
+
+        bot.inlineButton("5️⃣ Multi Mode", { callback: "callback_query_multimode" })
+  
+      ]
+    ]
+    );
+    return bot.sendMessage(msg.chat.id, message, { parse, markup });
   }
+    /* OLD start/help menu
+    if (
+      msg.text === "/start" ||
+      msg.text === "/help" ||
+      msg.text === "/help@RedditBrowserBot" ||
+      msg.text === "/start@RedditBrowserBot"
+    ) {
+      skips = 0;
+      const message = helpMessage;
+      logger.info("User(" + msg.from.username + "): " + msg.text);
+      return bot.sendMessage(msg.chat.id, message, { parse });
+    }*/
 
   //list of popular subreddits
   else if (msg.text === "/list" || msg.text === "/list@RedditBrowserBot") {
@@ -595,7 +627,6 @@ bot.on("text", msg => {
     logger.info("User: " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
-
   //options
   else if (
     msg.text === "/options" ||
@@ -673,11 +704,11 @@ bot.on("text", msg => {
       { url: `http://www.reddit.com/r/${subreddit}/${options}`, json: true },
       function (error, response, body) {
         console.log(error)
-        if(!error) {
-        if (body.hasOwnProperty("error") || body.data.children.length < 1) {
-          console.log("invalid sub")
-          return sendErrorMsg(msg.chat.id);
-        }
+        if(!error && response.statusCode === 200) {
+            if (body.hasOwnProperty("error") || body.data.children.length < 1) {
+              console.log("invalid sub")
+              return sendErrorMsg(msg.chat.id);
+            }
         else {
           client.get(msg.chat.id, function (err, res) {
             console.log("id=" + msg.chat.id + " result=" + res)
@@ -700,7 +731,7 @@ bot.on("text", msg => {
         //}
       }
       else {
-        return sendErrorMsg(messageId);
+        return sendErrorMsg(msg.chat.id);
       }
     });
   }
@@ -780,19 +811,18 @@ bot.on("text", msg => {
           }
           subs = subs.join("+")
           //console.log("after removing jokes = " + subs)
-          client.set(msg.chat.id, subs, function (err, res) {
-            if(err)
-              logger.error(err)
-            //if(!subs.text.includes(subreddit))
-            //  return bot.sendMessage(msg.chat.id, "You haven't subscribed to that subreddit yet. use /subscribe <subreddit_name> to subscribe.")
-            else //if (subs)
-              return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit} 👍🏼`)
+          if (!(res.includes(subreddit))) {
+            return bot.sendMessage(msg.chat.id, `You aren't subscribed to r‏/${subreddit} 😏\nSee your /subscriptions.`, { parse })
+          }
+          else {
+            client.set(msg.chat.id, subs, function (err, res) {
+              if (err)
+                logger.error(err)
+              else
+                return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit} 👍🏼`)
             });
+          }
         }
-      }
-      else if(!(res.includes(subreddit)))
-      {
-        return bot.sendMessage(msg.chat.id, `You aren't subscribed to r‏/${subreddit} 😏\nSee your /subscriptions.`, {parse})
       }
       else if (!res) {
         console.log(err)
@@ -978,6 +1008,178 @@ bot.on("callbackQuery", async msg => {
     await bot.answerCallbackQuery(msg.id);
     //}
   }
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_helpfeatures") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = featureList;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_inbuiltsubs") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = inbuiltSubs;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_listsubs") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = listSubs;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_emojimode") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = emojiMode;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_multimode") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = multiMode;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_sortoptions") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = sortOptions;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_helpsubs") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = subscriptions;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_back") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = helpMessage;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("Features", { callback: "callback_query_helpfeatures" }),
+
+        bot.inlineButton("Subscriptions", { callback: "callback_query_helpsubs" }),
+
+        bot.inlineButton("Default Subs", { callback: "callback_query_inbuiltsubs" })
+      ],
+      [
+        bot.inlineButton("Popular Subs", { callback: "callback_query_listsubs" }),
+
+        bot.inlineButton("Emoji Mode", { callback: "callback_query_emojimode" }),
+
+        bot.inlineButton("Multi Mode", { callback: "callback_query_multimode" })
+
+      ]
+    ]);
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
 });
 
 var subPostNum = 0;

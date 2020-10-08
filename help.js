@@ -4,36 +4,39 @@ I am Reddgram bot 🤖
 
 I am here to help you browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!_
 
-_New features:_
-*Subscriptions* -- /helpsubs to get started. Subscribe to any subreddit by using \`\/sub subreddit_name\` and unsubscribe using \`/unsub subreddit_name\`. 
-*Multi Mode* -- /multi to get started on how to browse multiple threads at a time.
-*Emoji Mode* -- /emoji _A new way to browse subreddits_.
-*Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\`
+*How to use me:*
+          
+    \`\/subreddit_name  [sort_option]\` (long press to copy)
 
-*How to use Reddgram:*
-
-1. *Format:* 
-          \`\/subreddit_name  [sort_option]\` (long press to copy)
-
-      a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
-
-      b. (optional) *sort_option* can be any of the /options. 
+    a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
+    
+    b. (optional) *sort_option* can be any of the /options. 
 
 For eg. \`\/aww top\` (long press to copy) to get top threads of r/aww - a sub dedicated to cute pets.
 
 _Note: Default option is "hot", so /aww will return hottest threads from the past day._
 
-2. /random - random threads from all subreddits
-
-    /all - all hot threads from all subreddits
-
-    /popular - most popular threads from all subreddits.
-
-_💡Tip for mobile users: Long press on any of the above commands to be able to edit and send with a sort option_
-
-_Note: "aww top" kind of format is no longer supported due to issues while browsing in groups_
-
 ✉️ In case of issues, /contact the developer`;
+
+module.exports = featureList = `*Reddgram Features:*
+
+*Subscriptions* - Subscribe to any subreddit by using \`\/sub subreddit_name\` and unsubscribe using \`/unsub subreddit_name\`
+
+*Import subreddits* - Import your subreddits from reddit.com as _Subscriptions_ and get posts from them regularly. check /import.
+
+*Multi Mode* - Fetch multiple threads at a time. eg. \`\/jokes hot 5\`
+
+*Emoji Mode* - A new way to browse subreddits, the emoji way.
+
+*Multireddit* - Combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` `
+
+module.exports = inbuiltSubs = `*Some default subs that you can browse:*
+
+/random - _random_ threads from all subreddits
+
+/all - _all_ hot threads from all subreddits
+
+/popular - most _popular_ threads from all subreddits.`
 
 module.exports = listSubs = `Here is a list of most popular subreddits on Reddit, click on any of these links to browse *hot* threads:
   (and of course you can customize the *sort_option* with any of the /options):. eg. \`/aww all\` fetches all time popular threads of r/aww)
@@ -114,17 +117,17 @@ module.exports = listSubs = `Here is a list of most popular subreddits on Reddit
 module.exports = emojiMode = `Welcome to a whole new way to browse Reddit: *Emoji Mode* is here.
 Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
-😂😀😃😄😁😆😅🤣 - subs that tickle your funny bone 
+😂/😀/😃/😄/😁/😆/😅/🤣 - subs that tickle your funny bone 
 
-🧐👀👁 - browse pics/gifs/videos from various subs
+🧐/👀/👁 - browse pics/gifs/videos from various subs
 
 😍 - subs that make you go aww
 
 👌 - subs that make you go wow
 
-😳😱😨😰🤯 - subs that blow your mind away
+😳/😱/😨/😰/🤯 - subs that blow your mind away
 
-😋🤤 - mmmm! tasty food
+😋/🤤 - mmmm! tasty food
 
 🤔 - know stuff you never knew
 
@@ -140,7 +143,7 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 💪 - self improvement subs
 
-🤦🤦‍♀️ - _facepalm_
+🤦/🤦‍♀️ - _facepalm_
 
 💩 - shitty subs
 
@@ -148,7 +151,7 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 😎 - random
 
-🍑🖕 - nsfw🔞 
+🍑/🖕 - nsfw🔞 
 
 ...and many more coming soon`;
 
@@ -171,7 +174,7 @@ For eg. Try entering  \`/pics new\`.
 module.exports = contactDev = `Contact @suhasa010 or drop a message in the _Official Reddgram Group_ if you face any issues or have a feature request.
 Join the _Projects Channel_ for updates related to the bot and for more info on my other projects.`;
 
-module.exports = multiMode = `*Multi Mode* is finally here! (beta feature)
+module.exports = multiMode = `*Multi Mode*
       
 Now browse multiple threads at a time as opposed to clicking next after every single one.
 
@@ -184,11 +187,9 @@ Just send
 Currently this mode has some limitations;
 1. Max number of threads that can be fetched at a time is 5 (might change in the future).
 2. You will have to scroll from bottom to top to be able to browse the fetched threads.
-
-There may be some bugs since this feature is still in beta, please report them over at @reddgramIssues.
 `;
 
-module.exports = subscriptions = `You can now subscribe to any of the subreddits to receive regular posts in your PM or in your groups.
+module.exports = subscriptions = `You can now subscribe to any of the subreddits to receive regular posts in your PM or in your groups or _you can import your existing subreddits_ from reddit.com. check /import.
 
 All you have to do is -
 
