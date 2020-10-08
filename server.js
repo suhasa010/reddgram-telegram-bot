@@ -589,7 +589,7 @@ bot.on("text", msg => {
         bot.inlineButton("*️⃣ Default Subs", { callback: "callback_query_inbuiltsubs" })
       ],
       [
-        bot.inlineButton("*️💣 Popular Subs", {callback: "callback_query_listsubs"}),
+        bot.inlineButton("💣 Popular Subs", {callback: "callback_query_listsubs"}),
 
         bot.inlineButton("😎 Emoji Mode", { callback: "callback_query_emojimode" }),
 
@@ -1162,22 +1162,22 @@ bot.on("callbackQuery", async msg => {
     const message = helpMessage;
     const markup = bot.inlineKeyboard([
       [
-        bot.inlineButton("Features", { callback: "callback_query_helpfeatures" }),
+        bot.inlineButton("💫 Features", { callback: "callback_query_helpfeatures" }),
 
-        bot.inlineButton("Subscriptions", { callback: "callback_query_helpsubs" }),
+        bot.inlineButton("📢 Subscriptions", { callback: "callback_query_helpsubs" }),
 
-        bot.inlineButton("Default Subs", { callback: "callback_query_inbuiltsubs" })
+        bot.inlineButton("*️⃣ Default Subs", { callback: "callback_query_inbuiltsubs" })
       ],
       [
-        bot.inlineButton("Popular Subs", { callback: "callback_query_listsubs" }),
+        bot.inlineButton("💣 Popular Subs", { callback: "callback_query_listsubs" }),
 
-        bot.inlineButton("Emoji Mode", { callback: "callback_query_emojimode" }),
+        bot.inlineButton("😎 Emoji Mode", { callback: "callback_query_emojimode" }),
 
-        bot.inlineButton("Multi Mode", { callback: "callback_query_multimode" })
+        bot.inlineButton("5️⃣ Multi Mode", { callback: "callback_query_multimode" })
 
       ]
     ]);
-    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown', markup })
   }
   await bot.answerCallbackQuery(msg.id);
 });
