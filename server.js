@@ -138,7 +138,6 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         
         // send error message if the bot encountered one
         if (body.hasOwnProperty("error") || body.data.children.length < 1) {
-          console.log(body.data.children.length <1);
           return sendErrorMsg(messageId);
         } else if (body.data.children.length - 1 < postNum) {
           return noMorePosts(messageId);
@@ -155,6 +154,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           try {
             redditPost = body.data.children[postNum + 1].data;
           } catch (err) {
+            logger.error("ERROR: "+err);
             return noMorePosts(messageId);
           }
           skips = skips + 1;
@@ -188,7 +188,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.domain === "preview.reddit.com" ||
           redditPost.domain === "preview.redd.it"
         ) {
-          // sendPlsWait(messageId);
+          //sendPlsWait(messageId);
           //bot.sendChatAction(messageId, "upload_photo");
           return sendImagePost(messageId, redditPost, markup);
         }
@@ -197,7 +197,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
           redditPost.preview &&
           redditPost.preview.images[0].variants.mp4
         ) {
-          //bot.sendChatAction(messageId, "upload_video");
+          bot.sendChatAction(messageId, "upload_video");
           // sendPlsWait(messageId);
           sendGifPost(messageId, redditPost, markup);
         }
@@ -230,6 +230,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
 
         // unsuccessful response
       } else {
+        logger.error("ERROR: "+error);
         return sendErrorMsg(messageId);
       }
     }
@@ -331,7 +332,7 @@ function sendImagePost(messageId, redditPost, markup) {
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
-  logger.info("about to send the post to telegram")
+  //logger.info("about to send the post to telegram")
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
   return bot.sendMessage(messageId, caption, { parse, markup });
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
@@ -368,6 +369,7 @@ function sendLinkPost(messageId, redditPost, markup) {
   }`;
   //<a href="${url}">[Link]</a>
   logger.info("Request completed: link thread");
+  console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
   //nsfw indicator
   if (redditPost.over_18 === true) message = "🔞" + message;
   return bot.sendMessage(messageId, message, { parse, markup });
@@ -463,6 +465,7 @@ function sendMessagePost(messageId, redditPost, markup) {
   try {
     var validSub = redditPost.selftext.length;
   } catch (err) {
+    logger.error("ERROR: "+err);
     return sendErrorMsg(messageId);
   }
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
@@ -578,7 +581,7 @@ bot.on("text", msg => {
   ) {
     skips = 0;
     const message = helpMessage;
-    logger.info("User(" + msg.from.username + "): " + msg.text);
+    logger.info("User("+msg.from.id+") : " + msg.text);
     const markup = bot.inlineKeyboard(
     [
       [
@@ -617,14 +620,14 @@ bot.on("text", msg => {
   else if (msg.text === "/list" || msg.text === "/list@RedditBrowserBot") {
     skips = 0;
     const message = listSubs;
-    logger.info("User: " + msg.text);
+    logger.info("User("+msg.from.id+") : " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
   //emoji mode
   else if (msg.text === "/emoji" || msg.text === "/emoji@RedditBrowserBot") {
     skips = 0;
     const message = emojiMode;
-    logger.info("User: " + msg.text);
+    logger.info("User("+msg.from.id+") : " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
   //options
@@ -634,7 +637,7 @@ bot.on("text", msg => {
   ) {
     skips = 0;
     const message = sortOptions;
-    logger.info("User: " + msg.text);
+    logger.info("User("+msg.from.id+") : " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse });
   }
   else if (
@@ -655,7 +658,7 @@ bot.on("text", msg => {
     ]);
     skips = 0;
     const message = contactDev;
-    logger.info("User: " + msg.text);
+    logger.info("User("+msg.from.id+") : " + msg.text);
     return bot.sendMessage(msg.chat.id, message, { parse, markup });
   }
   else if (
@@ -680,47 +683,47 @@ bot.on("text", msg => {
     msg.text === "/import" ||
     msg.text === "/import@RedditBrowserBot"
   ) {
+    logger.info("User("+msg.from.id+") : " + msg.text);
     return bot.sendMessage(msg.chat.id, `Import all of your subreddits into reddgram bot as subscriptions and get notified every 3 hours!
     https://telegra.ph/Tutorial-How-to-import-your-existing-subreddits-on-redditcom-to-Reddgram-bot-on-Telegram-10-04`);
   }
   else if (/\/sub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text) || /\/import[@RedditBrowserBot]* [https://old.reddit.com/r/]+[a-zA-Z0-9_+]+$/.test(msg.text)) {
     if (/\/import [https://old.reddit.com/r/]+[a-zA-Z0-9_+]+$/.test(msg.text)) {
       var subreddit = msg.text.slice(33, msg.text.length);
-      console.log(subreddit)
+      logger.info("User("+msg.from.id+") : " + msg.text);
+      //console.log(subreddit)
       bot.sendMessage(msg.chat.id, "Successfully imported subreddits from Reddit 🥳\nSee those here - /subscriptions")
     }
     else {
       const parse = "Markdown";
       //if (msg.text.includes("/")) {
+      logger.info("User("+msg.from.id+") : " + msg.text);
       msg.text = msg.text.slice(1, msg.text.length);
-      console.log("after slice: " + msg.text)
+      //console.log("after slice: " + msg.text)
       //}
-      logger.info("User(" + msg.from.username + "): " + msg.text);
       var [subscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
-      console.log("sub = " + subreddit)
+      //console.log("sub = " + subreddit)
     }
     const options = getOptions(option, rLimit);
     request(
       { url: `http://www.reddit.com/r/${subreddit}/${options}`, json: true },
       function (error, response, body) {
-        console.log(error)
         if(!error && response.statusCode === 200) {
             if (body.hasOwnProperty("error") || body.data.children.length < 1) {
-              console.log("invalid sub")
+              logger.error("INVALID SUB: User("+msg.from.id+") : " + msg.text);
               return sendErrorMsg(msg.chat.id);
             }
         else {
           client.get(msg.chat.id, function (err, res) {
-            console.log("id=" + msg.chat.id + " result=" + res)
             res += '+'
-            console.log("it already includes "+subreddit+" "+res.includes(subreddit) + "result" + res)
             if (res.includes(subreddit)) {
-              return bot.sendMessage(msg.chat.id, `Duh! You are already subscribed to r‏/${subreddit} 😏\nCheck /subscriptions maybe?`, { parse })
+              logger.info("ALREADY SUBBED: User("+msg.from.id+") : " + msg.text);
+              return bot.sendMessage(msg.chat.id, `_Duh! You are already subscribed to r‏/${subreddit} 😏\nCheck_ /subscriptions _maybe?_`, { parse })
             }
             else {
+            logger.info("SUCCESSFULLY SUBBED: User("+msg.from.id+") : " + msg.text);
             client.APPEND(msg.chat.id, `${subreddit}+`, function (err, res) {
-              return bot.sendMessage(msg.chat.id, `Yay! Successfully subscribed to r‏/${subreddit} 🥳\nSee it here - /subscriptions`, { parse })
-
+              return bot.sendMessage(msg.chat.id, `_Yay! Successfully subscribed to r‏/${subreddit} 🥳\nSee it here -_ /subscriptions`, { parse })
             });
           }
           }
@@ -737,19 +740,19 @@ bot.on("text", msg => {
   }
   else if (msg.text.includes('/subscriptions')) {
     const parse = "Markdown";
+    logger.info("User("+msg.from.id+") : " + msg.text);
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
-    logger.info("User(" + msg.from.username + "): " + msg.text);
     //userId = msg.from.id;
     client.get(msg.chat.id, function (err, res) {
       if (!res) {
-        console.log(err)
+        logger.error("NO SUBS: User("+msg.from.id+") : " + msg.text);
         return bot.sendMessage(msg.chat.id, noSubs , {parse})
       }
       else if (res) {
         var subs = res.toLowerCase().split("+");
-        console.log(subs);
+        //console.log(subs);
         var subscriptions = `<b>Your subscriptions 📢</b>\n\n`;
         var i,num = -1 ;
         const parse = "html";
@@ -759,9 +762,9 @@ bot.on("text", msg => {
                 subscriptions += `r‏/${subs}\n\n`;
               }
               catch(err) {
-                console.log(err)
+                logger.error("ERROR: "+ err)
               }
-              console.log(subscriptions);
+              //logger.info("Subscriptions for User("+msg.from.id+") : " + subscriptions);
             }
             num++;
           }
@@ -782,17 +785,93 @@ bot.on("text", msg => {
       }
     });
   }
+ /* else if (msg.text.includes('/subpaginated')) {
+    var bookPages = 100;
+
+    function getPagination(current, maxpage) {
+      var keys = [];
+      if (current > 1) keys.push({ text: `«1`, callback_data: '1' });
+      if (current > 2) keys.push({ text: `‹${current - 1}`, callback_data: (current - 1).toString() });
+      keys.push({ text: `-${current}-`, callback_data: current.toString() });
+      if (current < maxpage - 1) keys.push({ text: `${current + 1}›`, callback_data: (current + 1).toString() })
+      if (current < maxpage) keys.push({ text: `${maxpage}»`, callback_data: maxpage.toString() });
+
+      return {
+        reply_markup: JSON.stringify({
+          inline_keyboard: [keys]
+        })
+      };
+    }
+
+    bot.onText(/\/book/, function (msg) {
+      bot.sendMessage(msg.chat.id, 'Page: 25', getPagination(25, bookPages));
+    });
+
+    bot.on('callback_query', function (message) {
+      var msg = message.message;
+      var editOptions = Object.assign({}, getPagination(parseInt(message.data), bookPages), { chat_id: msg.chat.id, message_id: msg.message_id });
+      bot.editMessageText('Page: ' + message.data, editOptions);
+    });
+    const parse = "Markdown";
+    logger.info("User(" + msg.from.id + ") : " + msg.text);
+    if (msg.text.includes("/")) {
+      msg.text = msg.text.slice(1, msg.text.length);
+    }
+    //userId = msg.from.id;
+    client.get(msg.chat.id, function (err, res) {
+      if (!res) {
+        logger.error("NO SUBS: User(" + msg.from.id + ") : " + msg.text);
+        return bot.sendMessage(msg.chat.id, noSubs, { parse })
+      }
+      else if (res) {
+        var subs = res.toLowerCase().split("+");
+        //console.log(subs);
+        var subscriptions = `<b>Your subscriptions 📢</b>\n\n`;
+        var i, num = -1;
+        const parse = "html";
+        subs.forEach((subs) => {
+          if (subs !== '') {
+            try {
+              subscriptions += `r‏/${subs}\n\n`;
+            }
+            catch (err) {
+              logger.error("ERROR: " + err)
+            }
+            //logger.info("Subscriptions for User("+msg.from.id+") : " + subscriptions);
+          }
+          num++;
+        }
+        );
+        var singleSubs = subscriptions.split("\n\n")
+        console.log(singleSubs)
+        const markup = bot.inlineKeyboard([
+          [
+            bot.inlineButton(`Unsubscribe ${num} sub(s)`, {
+              callback: "callback_query_unsuball"
+            })
+          ],
+          [
+            bot.inlineButton("Browse all", {
+              callback: "callback_query_browsesubs"
+            })
+          ]
+        ]);
+        return bot.sendMessage(msg.chat.id, subscriptions, { parse, markup });
+      }
+    });
+  }
+  */
+
   else if (/\/unsub[scribe]*[@RedditBrowserBot]* [/a-zA-Z0-9+_]*$/.test(msg.text))  {
-    const parse = "Markdown"
+    const parse = "Markdown";
+    logger.info("User("+msg.from.id+") : " + msg.text);
     if (msg.text.includes("/")) {
       msg.text = msg.text.slice(1, msg.text.length);
     }
     var subs;
-    logger.info("User(" + msg.from.username + "): " + msg.text);
     var [unsubscribe, subreddit, option] = msg.text.toLowerCase().split(" ");
 
     client.get(msg.chat.id, function (err, res) {
-      console.log(res)
       if (res) {
         subs = res.toLowerCase().split("+");
         //console.log(subs);
@@ -812,20 +891,21 @@ bot.on("text", msg => {
           subs = subs.join("+")
           //console.log("after removing jokes = " + subs)
           if (!(res.includes(subreddit))) {
-            return bot.sendMessage(msg.chat.id, `You aren't subscribed to r‏/${subreddit} 😏\nSee your /subscriptions.`, { parse })
+            logger.error("NOT SUBBED: User("+msg.from.id+") : " + msg.text);
+            return bot.sendMessage(msg.chat.id, `_ERROR: You aren't subscribed to r‏/${subreddit} 😏\nSee your_ /subscriptions.`, { parse })
           }
           else {
             client.set(msg.chat.id, subs, function (err, res) {
               if (err)
                 logger.error(err)
               else
-                return bot.sendMessage(msg.chat.id, `Successfully unsubscribed from r‏/${subreddit} 👍🏼`)
+                return bot.sendMessage(msg.chat.id, `_Successfully unsubscribed from r‏/${subreddit} 👍🏼_`, { parse })
             });
           }
         }
       }
       else if (!res) {
-        console.log(err)
+        logger.error("ERROR: "+ noSubs)
         return bot.sendMessage(msg.chat.id, noSubs, {parse})
       }
     });
@@ -840,12 +920,12 @@ bot.on("text", msg => {
     if (msg.text.includes("@RedditBrowserBot")) {
       if (msg.text.includes("/")) {
         msg.text = msg.text.slice(1, msg.text.length);
-        logger.info("User(" + msg.from.username + "): " + msg.text);
+        logger.info("User("+msg.from.id+") : " + msg.text);
         var [subreddit, option] = msg.text.toLowerCase().split("@");
         var [mention, option1] = option.toLowerCase().split(" ");
         var option = option1;
         skips = 0;
-        logger.info("User(" + msg.from.username + "): " + msg.text);
+        logger.info("User("+msg.from.id+") : " + msg.text);
 
         const userId = `id_${msg.chat.id}`;
         const messageId = msg.chat.id;
@@ -858,7 +938,7 @@ bot.on("text", msg => {
     else {
       //for PMs
       skips = 0;
-      logger.info("User(" + msg.from.username + "): " + msg.text);
+      logger.info("User("+msg.from.id+") : " + msg.text);
 
       if (msg.text.includes("/")) {
         msg.text = msg.text.slice(1, msg.text.length);
@@ -883,6 +963,7 @@ bot.on("text", msg => {
             }
           }
           else {
+            logger.error("ERROR: User("+msg.from.id+") : " + msg.text);
             return bot.sendMessage(messageId, `_ERROR: Sorry, we can't show more than ${multiLimit} threads in Multi Mode._`, { parse });
           }
           //var numUserId = userId.replace(/[^0-9]/g,'');
@@ -913,7 +994,7 @@ bot.on("callbackQuery", async msg => {
     userId = `id_${msg.message.chat.id}`;
     const messageId = msg.message.chat.id;
     //console.log(msg.message.chat.id)
-    logger.info("User: clicked next");
+    logger.info("User("+msg.from.id+") clicked next");
     let subreddit = "",
       option = "";
     let postNum = 0;
@@ -961,7 +1042,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from"+msg.from.id);
+  //console.log("from"+msg.from.id);
   if (msg.data === "callback_query_unsuball") {
     console.log(userId + " " + msg.from.id)
     //if (!(/^-[0-9]+$/.test(msg.message.chat.id)) || (member.status == 'administrator')) {
@@ -971,8 +1052,8 @@ bot.on("callbackQuery", async msg => {
         else {
           chatId = msg.message.chat.id;
           messageId = msg.message.message_id;
-          console.log(" " + msg.from.id + " " + chatId + " " + messageId)
-          return bot.editMessageText({ chatId, messageId }, "Successfully unsubscribed from all subscriptions 👻\nTo subscribe again, send \`/sub subreddit_name\`", { parseMode: 'Markdown' })
+          logger.info("User("+msg.from.id+") unsubscribed from all subs");
+          return bot.editMessageText({ chatId, messageId }, "_Successfully unsubscribed from all subscriptions 👻\nTo subscribe again, send_ \`/sub subreddit_name\`", { parseMode: 'Markdown' })
         }
       });
     //}
@@ -989,19 +1070,20 @@ bot.on("callbackQuery", async msg => {
     console.log(member)
   }*/
   if (msg.data === "callback_query_browsesubs") {
-    console.log("from" + msg.from.id);
+    //console.log("from" + msg.from.id);
     client.get(msg.from.id, function (err, reply) {
       if (reply !== "") {
         const sub = reply;
-        console.log("subreddits: "+sub)
+        //console.log("subreddits: "+sub)
         option = "hot";
         const userId = `id_${msg.from.id}`;
         updateUser(userId, sub, option, subPostNum);
+        logger.info("User("+msg.from.id+") browsing all subs");
         sendRedditPost(msg.from.id, sub, option, subPostNum)
         //console.log(chat + " " + sub + " " + option + " ")
       }
     });
-    console.log("postnumber " + subPostNum)
+    //console.log("postnumber " + subPostNum)
     rands = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
     rand = rands[Math.floor(Math.random() * rands.length)];
     subPostNum = subPostNum + 1;
@@ -1015,7 +1097,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_helpfeatures") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1025,6 +1107,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw Features");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1035,7 +1118,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_inbuiltsubs") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1045,6 +1128,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw Default Subs");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1055,7 +1139,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_listsubs") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1065,6 +1149,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw Popular Subs");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1075,7 +1160,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_emojimode") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1085,6 +1170,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw Emoji Mode");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1095,7 +1181,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_multimode") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1105,6 +1191,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw Multi Mode");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1115,7 +1202,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_sortoptions") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1125,6 +1212,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw Sort Options ");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1135,7 +1223,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_helpsubs") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1145,6 +1233,7 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
+    logger.info("User("+msg.from.id+") saw SUbscriptions help");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
   }
   await bot.answerCallbackQuery(msg.id);
@@ -1155,7 +1244,7 @@ bot.on("callbackQuery", async msg => {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
   }*/
-  console.log("from" + msg.from.id);
+  //console.log("from" + msg.from.id);
   if (msg.data === "callback_query_back") {
     chatId = msg.message.chat.id;
     messageId = msg.message.message_id;
@@ -1182,6 +1271,10 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 var subPostNum = 0;
 setInterval(function () {
   //var chat;
@@ -1201,15 +1294,15 @@ setInterval(function () {
                 option = "hot";
                 const userId = `id_${chat}`;
                 updateUser(userId, sub, option, subPostNum);
-                sendRedditPost(chat, sub, option, subPostNum)
-                console.log(chat + " " + sub + " " + option + " ")
+                sleep(100).then(() => { sendRedditPost(chat, sub, option, subPostNum);  });
+                logger.info("Posted to "+ chat + "from " + sub + " subreddit ")
               }
             });
           }
         });
       });
     });
-  console.log("postnumber " + subPostNum)
+  //console.log("postnumber " + subPostNum)
   rands = Array(1,2,3,4,5,6,7,8);
   rand = rands[Math.floor(Math.random() * rands.length)];
   subPostNum = subPostNum + rand;
@@ -1234,15 +1327,15 @@ setInterval(function () {
                 option = "hot";
                 const userId = `id_${chat}`;
                 updateUser(userId, sub, option, subPostNum);
-                sendRedditPost(chat, sub, option, subPostNum)
-                console.log(chat + " " + sub + " " + option + " ")
+                sleep(100).then(() => { sendRedditPost(chat, sub, option, subPostNum);  });
+                logger.info("Posted to "+ chat + "from " + sub + " subreddit ")
               }
             });
           }
         });
       });
     });
-  console.log("postnumber " + subPostNum)
+  //console.log("postnumber " + subPostNum)
   rands = Array(1,2,3);
   rand = rands[Math.floor(Math.random() * rands.length)];
   subPostNum = subPostNum + rand

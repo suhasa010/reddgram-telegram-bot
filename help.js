@@ -8,7 +8,7 @@ I am here to help you browse all of Reddit's pics, gifs, videos, cats, news, mem
           
     \`\/subreddit_name  [sort_option]\` (long press to copy)
 
-    a. *subreddit_name* can be any of the subreddits in reddit. see /list for the most popular ones.
+    a. *subreddit_name* can be any of the subreddits in reddit. Click on _Popular Subs_ button for the most popular ones.
     
     b. (optional) *sort_option* can be any of the /options. 
 
@@ -114,8 +114,9 @@ module.exports = listSubs = `Here is a list of most popular subreddits on Reddit
   35. /woahdude
 `;
 
-module.exports = emojiMode = `Welcome to a whole new way to browse Reddit: *Emoji Mode* is here.
-Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
+module.exports = emojiMode = `_Welcome to a whole new way to browse Reddit:_ *Emoji Mode*.
+
+_Send any one of these emojis to browse the corresponding subreddit(s) a.k.a_ _subs_.
 
 😂/😀/😃/😄/😁/😆/😅/🤣 - subs that tickle your funny bone 
 
@@ -157,7 +158,7 @@ Send any of these emojis to browse the corresponding subreddit(s) a.k.a _subs_.
 
 module.exports = sortOptions = `*Sort Options:*
 
-You can customize the *sort_option* with any of the following: 
+_You can customize the_ *sort_option* _with any of the following_: 
 
 1. _(default)_ *hot* - Hot threads from past day 
 2. *top* - Top threads from past day
@@ -176,7 +177,7 @@ Join the _Projects Channel_ for updates related to the bot and for more info on 
 
 module.exports = multiMode = `*Multi Mode*
       
-Now browse multiple threads at a time as opposed to clicking next after every single one.
+_Now browse multiple threads at a time as opposed to clicking next after every single one._
 
 Just send 
 
@@ -189,9 +190,11 @@ Currently this mode has some limitations;
 2. You will have to scroll from bottom to top to be able to browse the fetched threads.
 `;
 
-module.exports = subscriptions = `You can now subscribe to any of the subreddits to receive regular posts in your PM or in your groups or _you can import your existing subreddits_ from reddit.com. check /import.
+module.exports = subscriptions = `You can now subscribe to any of the subreddits to receive regular posts in your PM or in your groups.
 
-All you have to do is -
+_You can also import your existing subreddits_ from reddit.com. check /import.
+
+To subscribe, all you have to do is -
 
 \`/sub memes\`
 
@@ -205,4 +208,4 @@ You can subscribe to multiple subreddits by repeating the same or by giving \`/s
 
 You can view your subscriptions any time by sending /subscriptions.`;
 
-module.exports = noSubs = `No subscriptions found 🧐\nTo subscribe, send \`/sub subreddit_name\``;
+module.exports = noSubs = `_ERROR: No subscriptions found 🧐\nTo subscribe, send_ \`/sub subreddit_name\``;

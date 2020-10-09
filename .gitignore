@@ -1,3 +1,4 @@
 node_modules
 .env
 development.log
+nohup.out
