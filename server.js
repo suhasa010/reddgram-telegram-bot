@@ -5,6 +5,7 @@ const help = require('./help.js');
 const http = require("http");
 const express = require("express");
 require('dotenv').config();
+const fetch = require("node-fetch")
 
 //const logRoutes = require("./routes/log.routes");
 //const initDB = require("./db");
@@ -117,16 +118,131 @@ const { features } = require('process');
 
 
 let db = {};
-let rLimit = 50;
+let rLimit = 100;
 var skips = 0; //keep track of no. of sticky threads skipped
 
 function updateUser(userId, subreddit, option, postNum) {
   db[userId] = { subreddit, option, postNum };
 }
 
-
-
 function sendRedditPost(messageId, subreddit, option, postNum) {
+  const options = getOptions(option, rLimit);
+  var start = new Date();
+  const url= `http://www.reddit.com/r/${subreddit}/${options}`
+  const sendRedditPost = async url => {
+    try {
+      const response = await fetch(url);
+      const body = await response.json();
+      // send error message if the bot encountered one
+      if (body.hasOwnProperty("error") || body.data.children.length < 1) {
+        return sendErrorMsg(messageId);
+      } else if (body.data.children.length - 1 < postNum) {
+        return noMorePosts(messageId);
+      }
+      //logger.info(postNum)
+      //if (body.data.children[0].data.subreddit_type === "restricted")
+      //return Restricted(messageId);
+
+      // reddit post data, "postNum+skips" takes into consideration the number of sticky threads skipped.
+      var redditPost = body.data.children[postNum + skips].data;
+
+      //ignore stickied/pinned posts
+      for (postNum = skips; redditPost.stickied === true; postNum++) {
+        try {
+          redditPost = body.data.children[postNum + 1].data;
+        } catch (err) {
+          logger.error("ERROR: "+err);
+          return noMorePosts(messageId);
+        }
+        skips = skips + 1;
+        //logger.info(postNum)
+      }
+
+      //if(redditPost.stickied === true)
+      //bot.click()
+      redditPost.title = redditPost.title.replace(/&amp;/g, "&");
+
+      // inline buttons
+      const markup = bot.inlineKeyboard([
+        [
+          //bot.inlineButton('🔗 Reddit', { url: `https://www.reddit.com${redditPost.permalink}` }),
+          bot.inlineButton("💬 Comments", {
+            url: `https://www.reddit.com${redditPost.permalink}`
+          }),
+          bot.inlineButton("↗️ Share", {
+            url: `https://t.me/share/url?text=%0D%0D${redditPost.title}\n\nShared via @RedditBrowserBot&url=https%3A//www.reddit.com${redditPost.permalink}`
+          }),
+          bot.inlineButton("⏭ Next", { callback: "callback_query_next" })
+        ]
+      ]);
+      
+      // if post is an image or if it's a gif or a link
+      if (
+        /\.(jpe?g|png)$/.test(redditPost.url) ||
+        redditPost.domain === "i.reddituploads.com" ||
+        redditPost.domain === "i.redd.it" ||
+        redditPost.domain === "imgur.com" ||
+        redditPost.domain === "preview.reddit.com" ||
+        redditPost.domain === "preview.redd.it"
+      ) {
+        //sendPlsWait(messageId);
+        //bot.sendChatAction(messageId, "upload_photo");
+        return sendImagePost(messageId, redditPost, markup);
+      }
+      //gif
+      else if (
+        redditPost.preview &&
+        redditPost.preview.images[0].variants.mp4
+      ) {
+        //bot.sendChatAction(messageId, "upload_video");
+        // sendPlsWait(messageId);
+        sendGifPost(messageId, redditPost, markup);
+      }
+      //video
+      else if (
+        redditPost.domain === "youtu.be" ||
+        redditPost.domain === "youtube.com" ||
+        redditPost.domain === "v.redd.it" ||
+        redditPost.domain === "i.redd.it" ||
+        redditPost.domain === "gfycat.com"
+      ) {
+        //bot.sendChatAction(messageId, "upload_video");
+        return sendVideoPost(messageId, redditPost, markup);
+      }
+      //link
+      else if (
+        /http(s)?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi.test(
+          redditPost.url
+        ) &&
+        !redditPost.selftext
+      ) {
+        //bot.sendChatAction(messageId, "typing");
+        return sendLinkPost(messageId, redditPost, markup);
+      }
+      //text
+      else {
+        //bot.sendChatAction(messageId, "typing");
+        return sendMessagePost(messageId, redditPost, markup);
+      }
+
+      // unsuccessful response
+    }
+    catch (error) {
+    console.log(error);
+  }
+  };   
+  try{
+    sendRedditPost(url)
+  }
+  catch (error) {
+    console.log(error);
+  }
+  //console.log(error
+  //logger.info("http request completed")
+}
+
+//original "request" based code 
+/* function sendRedditPost(messageId, subreddit, option, postNum) {
   const options = getOptions(option, rLimit);
   var start = new Date();
   request(
@@ -236,7 +352,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
     }
   );
   //logger.info("http request completed")
-}
+} */
 
 // options
 function getOptions(option, rlimit) {
@@ -326,8 +442,8 @@ function sendImagePost(messageId, redditPost, markup) {
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
   var caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
-⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
-✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
 
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
@@ -361,18 +477,25 @@ function sendLinkPost(messageId, redditPost, markup) {
   var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
     websitename[0]
   })</b>\n
-⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${
-    redditPost.num_comments
-  } comments
-✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${
-    redditPost.author
-  }`;
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   //<a href="${url}">[Link]</a>
   logger.info("Request completed: link thread");
   console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
   //nsfw indicator
-  if (redditPost.over_18 === true) message = "🔞" + message;
-  return bot.sendMessage(messageId, message, { parse, markup });
+  //if (redditPost.over_18 === true) message = "🔞" + message;
+  try {
+  return bot.sendMessage(messageId, message, {parse, markup});
+  }
+  catch(err) {
+    console.log(err)
+    postNum = postNum + 1;
+    subreddit = redditPost.subreddit;
+    //option = db[`id_${messageId}`].option;
+    //updateUser(messageId, subreddit, option, postNum);
+    sendRedditPost(messageId, subreddit, option, postNum);
+  }
+  //*/
 }
 
 function sendGifPost(messageId, redditPost, markup) {
@@ -396,8 +519,8 @@ function sendGifPost(messageId, redditPost, markup) {
 
   timeago = timeago.replace(/\s/g, "");
   var caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
-✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
@@ -428,8 +551,8 @@ function sendVideoPost(messageId, redditPost, markup) {
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
   var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
-⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
-✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: video/gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) message = "🔞" + message;
@@ -479,8 +602,8 @@ function sendMessagePost(messageId, redditPost, markup) {
       `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
       selfTextLimitExceeded(messageId) +
-      `\n\n⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
-✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+      `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
     logger.info("Request completed: long text thread");
     //nsfw indicator
     if (redditPost.over_18 === true) message = "🔞" + message;
@@ -494,8 +617,8 @@ function sendMessagePost(messageId, redditPost, markup) {
 
   var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n
-⬆️ <b>${points} points</b> (${upvote_ratio}% upvoted) • 💬 ${redditPost.num_comments} comments
-✏️ Posted ${timeago} ago in r‏/${redditPost.subreddit} by u/${redditPost.author}`;
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   //\n\n${url}
 
   //nsfw indicator
@@ -596,8 +719,13 @@ bot.on("text", msg => {
 
         bot.inlineButton("😎 Emoji Mode", { callback: "callback_query_emojimode" }),
 
-        bot.inlineButton("5️⃣ Multi Mode", { callback: "callback_query_multimode" })
+        bot.inlineButton("Ⓜ️ Multi Mode", { callback: "callback_query_multimode" })
   
+      ],
+      [
+        bot.inlineButton("⬇️ Import Subreddits", {callback: "callback_query_importsubs"}),
+        
+        bot.inlineButton("🤔 FAQs", {callback: "callback_query_faq"})
       ]
     ]
     );
@@ -653,6 +781,10 @@ bot.on("text", msg => {
       [
         bot.inlineButton("Projects Channel", {
         url: "https://t.me/ssjprojects"
+        }),
+
+        bot.inlineButton("Donate", {
+        url: "https://paypal.me/suhasa010"
         })
       ]
     ]);
@@ -684,15 +816,14 @@ bot.on("text", msg => {
     msg.text === "/import@RedditBrowserBot"
   ) {
     logger.info("User("+msg.from.id+") : " + msg.text);
-    return bot.sendMessage(msg.chat.id, `Import all of your subreddits into reddgram bot as subscriptions and get notified every 3 hours!
-    https://telegra.ph/Tutorial-How-to-import-your-existing-subreddits-on-redditcom-to-Reddgram-bot-on-Telegram-10-04`);
+    return bot.sendMessage(msg.chat.id, importSubs, { parse });
   }
-  else if (/\/sub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text) || /\/import[@RedditBrowserBot]* [https://old.reddit.com/r/]+[a-zA-Z0-9_+]+$/.test(msg.text)) {
-    if (/\/import [https://old.reddit.com/r/]+[a-zA-Z0-9_+]+$/.test(msg.text)) {
+  else if (/\/sub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text) || /\/import[ ]+[https://old.reddit.com/r/]+[a-zA-Z0-9_\-+]*$/.test(msg.text)) {
+    if (/\/import[ ]+[https://old.reddit.com/r/]+[a-zA-Z0-9_\-+]*$/.test(msg.text)) {
       var subreddit = msg.text.slice(33, msg.text.length);
       logger.info("User("+msg.from.id+") : " + msg.text);
       //console.log(subreddit)
-      bot.sendMessage(msg.chat.id, "Successfully imported subreddits from Reddit 🥳\nSee those here - /subscriptions")
+      bot.sendMessage(msg.chat.id, "Successfully imported subreddits from Reddit 🥳\nIn a few seconds you should be able to see those here - /subscriptions")
     }
     else {
       const parse = "Markdown";
@@ -771,12 +902,12 @@ bot.on("text", msg => {
         );
         const markup = bot.inlineKeyboard([
           [
-            bot.inlineButton(`Unsubscribe ${num} sub(s)`, {
+            bot.inlineButton(`🗑 Unsubscribe ${num} sub(s)`, {
               callback: "callback_query_unsuball"
             })
           ],
           [
-            bot.inlineButton("Browse all", {
+            bot.inlineButton("🔀 Browse all", {
               callback: "callback_query_browsesubs"
             })
           ]
@@ -1233,8 +1364,50 @@ bot.on("callbackQuery", async msg => {
         bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
       ]
     ]);
-    logger.info("User("+msg.from.id+") saw SUbscriptions help");
+    logger.info("User("+msg.from.id+") saw Subscriptions help");
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  //console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_importsubs") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = importSubs;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    logger.info("User("+msg.from.id+") saw Import Subreddits");
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown',markup})
+  }
+  await bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
+    var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
+    console.log(member)
+  }*/
+  //console.log("from" + msg.from.id);
+  if (msg.data === "callback_query_faq") {
+    chatId = msg.message.chat.id;
+    messageId = msg.message.message_id;
+    const message = faq;
+    const markup = bot.inlineKeyboard([
+      [
+        bot.inlineButton("◀️ Back", { callback: "callback_query_back" })
+      ]
+    ]);
+    logger.info("User("+msg.from.id+") saw FAQs");
+    return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'HTML',markup, webPreview: false})
   }
   await bot.answerCallbackQuery(msg.id);
 });
@@ -1262,8 +1435,13 @@ bot.on("callbackQuery", async msg => {
 
         bot.inlineButton("😎 Emoji Mode", { callback: "callback_query_emojimode" }),
 
-        bot.inlineButton("5️⃣ Multi Mode", { callback: "callback_query_multimode" })
+        bot.inlineButton("Ⓜ️ Multi Mode", { callback: "callback_query_multimode" })
 
+      ],
+      [
+        bot.inlineButton("⬇️ Import Subreddits", {callback: "callback_query_importsubs"}),
+        
+        bot.inlineButton("🤔 FAQs", {callback: "callback_query_faq"})
       ]
     ]);
     return bot.editMessageText({ chatId, messageId }, message, { parseMode: 'Markdown', markup })
