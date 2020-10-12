@@ -483,12 +483,13 @@ function sendLinkPost(messageId, redditPost, markup) {
   logger.info("Request completed: link thread");
   console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
   //nsfw indicator
-  //if (redditPost.over_18 === true) message = "🔞" + message;
+  if (redditPost.over_18 === true) message = "🔞" + message;
   try {
-  return bot.sendMessage(messageId, message, {parse, markup});
+    sleep(100).then(() => { 
+  bot.sendMessage(messageId, message, {parse, markup}) });
   }
   catch(err) {
-    console.log(err)
+    console.log("error")
     postNum = postNum + 1;
     subreddit = redditPost.subreddit;
     //option = db[`id_${messageId}`].option;
@@ -818,8 +819,8 @@ bot.on("text", msg => {
     logger.info("User("+msg.from.id+") : " + msg.text);
     return bot.sendMessage(msg.chat.id, importSubs, { parse });
   }
-  else if (/\/sub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text) || /\/import[ ]+[https://old.reddit.com/r/]+[a-zA-Z0-9_\-+]*$/.test(msg.text)) {
-    if (/\/import[ ]+[https://old.reddit.com/r/]+[a-zA-Z0-9_\-+]*$/.test(msg.text)) {
+  else if (/\/sub[scribe]*[@RedditBrowserBot]* [a-zA-Z0-9+_]*$/.test(msg.text) || /\/import[ ]+[https://old.reddit.com/r/]+[a-zA-Z0-9_\-+\/]*$/.test(msg.text)) {
+    if (/\/import[ ]+[https://old.reddit.com/r/]+[a-zA-Z0-9_\-+\/]*$/.test(msg.text)) {
       var subreddit = msg.text.slice(33, msg.text.length);
       logger.info("User("+msg.from.id+") : " + msg.text);
       //console.log(subreddit)
@@ -1452,6 +1453,8 @@ bot.on("callbackQuery", async msg => {
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+//bot.sendMessage(15024063, "A bug in Import function has been fixed. You can try importing again :)")
 
 var subPostNum = 0;
 setInterval(function () {
