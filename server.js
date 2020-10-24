@@ -1,5 +1,3 @@
-//import sqlite3 from 'sqlite3'
-//import { open } from 'sqlite'
 //Don't sleep
 const help = require('./help.js');
 const http = require("http");
@@ -128,7 +126,7 @@ function updateUser(userId, subreddit, option, postNum) {
 function sendRedditPost(messageId, subreddit, option, postNum) {
   const options = getOptions(option, rLimit);
   var start = new Date();
-  const url= `http://www.reddit.com/r/${subreddit}/${options}`
+  const url= `http://www.reddit.com\/r\/${subreddit}\/${options}`
   const sendRedditPost = async url => {
     try {
       const response = await fetch(url);
@@ -170,9 +168,9 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             url: `https://www.reddit.com${redditPost.permalink}`
           }),
           bot.inlineButton("↗️ Share", {
-            url: `https://t.me/share/url?text=%0D%0D${redditPost.title}\n\nShared via @RedditBrowserBot&url=https%3A//www.reddit.com${redditPost.permalink}`
+            url: `https://t.me/share/url?text=🔖 ${redditPost.title}\n\n↗️ Shared via @RedditBrowserBot&url=https%3A//www.reddit.com${redditPost.permalink}`
           }),
-          bot.inlineButton("⏭ Next", { callback: "callback_query_next" })
+          bot.inlineButton("▶️ Next", { callback: "callback_query_next" })
         ]
       ]);
       
@@ -450,11 +448,76 @@ function sendImagePost(messageId, redditPost, markup) {
   if (redditPost.over_18 === true) caption = "🔞" + caption;
   //logger.info("about to send the post to telegram")
   //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
-  return bot.sendMessage(messageId, caption, { parse, markup });
+  return bot.sendMessage(messageId, caption, { parse, markup }).catch(err => {
+    userId = `id_${messageId}`;
+    postNum = postNum + 1;
+    subreddit = redditPost.subreddit;
+    //option = db[`id_${messageId}`].option;
+    console.log("subreddit =" +subreddit + "postnum = "+postNum)
+  if (db[userId] === undefined) {
+      //bot.answerCallbackQuery(msg.id);
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+        { parse }
+      );
+    } else if (db[userId].hasOwnProperty("subreddit")) {
+      subreddit = db[userId]["subreddit"];
+    } else {
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+        { parse }
+      );
+    }
+  //postNum = 1
+  logger.error("Failed to Load. Loading next post...")
+  userId = `id_${messageId}`;
+  if (db[userId].hasOwnProperty("postNum")) {
+    postNum = db[userId]["postNum"];
+    postNum= postNum + 1;
+  }
+  db[userId]["postNum"] = postNum;
+  if (db[userId]["option"]) {
+    option = db[userId]["option"];
+  } else {
+    //default sort = hot
+    option = "hot";
+  }
+
+  updateUser(messageId, subreddit, option, postNum+1);
+  sendRedditPost(messageId, subreddit, option, postNum+1);
+});;
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
 }
 
 function sendLinkPost(messageId, redditPost, markup) {
+  var bestComment;
+  if(redditPost.subreddit == "explainlikeimfive") {
+    const url= `https:\/\/www.reddit.com\/r\/${redditPost.subreddit}\/comments\/${redditPost.id}.json?`
+    const sendBestComment = async url => {
+      try {
+        const response = await fetch(url);
+        const body = await response.json();
+        if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
+          return sendErrorMsg(messageId);
+        }
+        if(body[1].data.children[0].data.stickied === true) 
+        bestComment = body[1].data.children[1].data.body; //skip stickied comment
+      else bestComment = body[1].data.children[0].data.body;        
+      }
+      catch (error) {
+        console.log(error);
+      }
+    }
+    sendBestComment(url)
+  }
+
+  //CLEAN THIS UP
+  if(redditPost.subreddit == "explainlikeimfive")
+  {
+    sleep(2000).then(() => { 
+  //console.log(bestComment) 
   const parse = "HTML";
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
@@ -474,29 +537,152 @@ function sendLinkPost(messageId, redditPost, markup) {
   else var points = redditPost.score;
 
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
+  if(redditPost.subreddit == "explainlikeimfive")
+  {
+    var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
+      websitename[0]
+    })</b>\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  }
+  else {
   var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
     websitename[0]
   })</b>\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  }
   //<a href="${url}">[Link]</a>
   logger.info("Request completed: link thread");
-  console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
+  //console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
   //nsfw indicator
   if (redditPost.over_18 === true) message = "🔞" + message;
-  try {
-    sleep(100).then(() => { 
-  bot.sendMessage(messageId, message, {parse, markup}) });
-  }
-  catch(err) {
-    console.log("error")
+  var postNum = -1;
+  bot.sendMessage(messageId, message, {parse, markup}).catch(err => {
+    userId = `id_${messageId}`;
     postNum = postNum + 1;
     subreddit = redditPost.subreddit;
     //option = db[`id_${messageId}`].option;
-    //updateUser(messageId, subreddit, option, postNum);
-    sendRedditPost(messageId, subreddit, option, postNum);
+    console.log("subreddit =" +subreddit + "postnum = "+postNum)
+  if (db[userId] === undefined) {
+      //bot.answerCallbackQuery(msg.id);
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+        { parse }
+      );
+    } else if (db[userId].hasOwnProperty("subreddit")) {
+      subreddit = db[userId]["subreddit"];
+    } else {
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+        { parse }
+      );
+    }
+  //postNum = 1
+  logger.error("Failed to Load. Loading next post...")
+  userId = `id_${messageId}`;
+  if (db[userId].hasOwnProperty("postNum")) {
+    postNum = db[userId]["postNum"];
+    postNum= postNum + 1;
   }
+  db[userId]["postNum"] = postNum;
+  if (db[userId]["option"]) {
+    option = db[userId]["option"];
+  } else {
+    //default sort = hot
+    option = "hot";
+  }
+
+  updateUser(messageId, subreddit, option, postNum+1);
+  sendRedditPost(messageId, subreddit, option, postNum+1);
+});
   //*/
+    });
+  }
+  else {
+    const parse = "HTML";
+  let url = redditPost.url;
+  url = url.replace(/&amp;/g, "&");
+  //post time
+  var timeago = prettytime(redditPost.created_utc * 1000 - Date.now(), {
+    short: true,
+    decimals: 0
+  });
+  timeago = timeago.replace(/\s/g, "");
+
+  var { tld, domain, sub } = parser(redditPost.url);
+  //.*([^\.]+)(com|net|org|info|coop|int|co\.uk|org\.uk|ac\.uk|uk|)$
+  var websitename = domain.split(".");
+
+  if (redditPost.score >= 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
+  if(redditPost.subreddit == "explainlikeimfive")
+  {
+    var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
+      websitename[0]
+    })</b>\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  }
+  else {
+  var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
+    websitename[0]
+  })</b>\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  }
+  //<a href="${url}">[Link]</a>
+  logger.info("Request completed: link thread");
+  //console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
+  //nsfw indicator
+  if (redditPost.over_18 === true) message = "🔞" + message;
+  var postNum = -1;
+  bot.sendMessage(messageId, message, {parse, markup}).catch(err => {
+      userId = `id_${messageId}`;
+      postNum = postNum + 1;
+      subreddit = redditPost.subreddit;
+      //option = db[`id_${messageId}`].option;
+      console.log("subreddit =" +subreddit + "postnum = "+postNum)
+    if (db[userId] === undefined) {
+        //bot.answerCallbackQuery(msg.id);
+        return bot.sendMessage(
+          messageId,
+          "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+          { parse }
+        );
+      } else if (db[userId].hasOwnProperty("subreddit")) {
+        subreddit = db[userId]["subreddit"];
+      } else {
+        return bot.sendMessage(
+          messageId,
+          "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+          { parse }
+        );
+      }
+    //postNum = 1
+    logger.error("Failed to Load. Loading next post...")
+    userId = `id_${messageId}`;
+    if (db[userId].hasOwnProperty("postNum")) {
+      postNum = db[userId]["postNum"];
+      postNum= postNum + 1;
+    }
+    db[userId]["postNum"] = postNum;
+    if (db[userId]["option"]) {
+      option = db[userId]["option"];
+    } else {
+      //default sort = hot
+      option = "hot";
+    }
+
+    updateUser(messageId, subreddit, option, postNum+1);
+    sendRedditPost(messageId, subreddit, option, postNum+1);
+  });
+  }
 }
 
 function sendGifPost(messageId, redditPost, markup) {
@@ -525,7 +711,7 @@ function sendGifPost(messageId, redditPost, markup) {
   logger.info("Request completed: gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
-  return bot.sendVideo(messageId, gif, { parse, caption, markup });
+  return bot.sendVideo(messageId, gif, { parse, caption, markup })
 }
 
 function sendVideoPost(messageId, redditPost, markup) {
@@ -557,8 +743,47 @@ function sendVideoPost(messageId, redditPost, markup) {
   logger.info("Request completed: video/gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) message = "🔞" + message;
+  var postNum = -1;
+  return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+    userId = `id_${messageId}`;
+    postNum = postNum + 1;
+    subreddit = redditPost.subreddit;
+    //option = db[`id_${messageId}`].option;
+    console.log("subreddit =" +subreddit + "postnum = "+postNum)
+  if (db[userId] === undefined) {
+      //bot.answerCallbackQuery(msg.id);
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+        { parse }
+      );
+    } else if (db[userId].hasOwnProperty("subreddit")) {
+      subreddit = db[userId]["subreddit"];
+    } else {
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+        { parse }
+      );
+    }
+  //postNum = 1
+  logger.error("Failed to Load. Loading next post...")
+  userId = `id_${messageId}`;
+  if (db[userId].hasOwnProperty("postNum")) {
+    postNum = db[userId]["postNum"];
+    postNum= postNum + 1;
+  }
+  db[userId]["postNum"] = postNum;
+  if (db[userId]["option"]) {
+    option = db[userId]["option"];
+  } else {
+    //default sort = hot
+    option = "hot";
+  }
 
-  return bot.sendMessage(messageId, message, { parse, markup });
+  updateUser(messageId, subreddit, option, postNum+1);
+  sendRedditPost(messageId, subreddit, option, postNum+1);
+});
 }
 
 function sendMessagePost(messageId, redditPost, markup) {
@@ -573,8 +798,31 @@ function sendMessagePost(messageId, redditPost, markup) {
     console.log('log created', doc);
   })
   */
-
+  //CLEAN THIS UP
   //
+  var bestComment;
+  if(redditPost.subreddit == "explainlikeimfive") {
+    const url= `https:\/\/www.reddit.com\/r\/${redditPost.subreddit}\/comments\/${redditPost.id}.json?`
+    const sendBestComment = async url => {
+      try {
+        const response = await fetch(url);
+        const body = await response.json();
+        if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
+          return sendErrorMsg(messageId);
+        }
+        if(body[1].data.children[0].data.stickied === true) 
+          bestComment = body[1].data.children[1].data.body; //skip stickied comment
+        else bestComment = body[1].data.children[0].data.body;
+      }
+      catch (error) {
+        console.log(error);
+      }
+    }
+    sendBestComment(url)
+  }
+  if(redditPost.subreddit == "explainlikeimfive") {
+    sleep(2000).then(() => { 
+  //console.log(bestComment) 
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
   //let boldtitle = redditPost.title
@@ -599,34 +847,290 @@ function sendMessagePost(messageId, redditPost, markup) {
       var points = (redditPost.score / 1000).toFixed(1) + "k";
     else var points = redditPost.score;
     const preview = redditPost.selftext.slice(0, 3500);
+    if(redditPost.subreddit == "explainlikeimfive")
+    {
+      const preview = bestComment.slice(0, 3500); 
+      var message = `🔖 <b>${redditPost.title}</b>\n
+📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n`+ preview + selfTextLimitExceeded(messageId) + `\n 
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+    }
+    else {
     var message =
       `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
       selfTextLimitExceeded(messageId) +
       `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+    }
     logger.info("Request completed: long text thread");
     //nsfw indicator
     if (redditPost.over_18 === true) message = "🔞" + message;
     logger.info("Request completed: text thread");
-    return bot.sendMessage(messageId, message, { parse, markup });
+    var postNum = -1;
+    return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+      userId = `id_${messageId}`;
+      postNum = postNum + 1;
+      subreddit = redditPost.subreddit;
+      //option = db[`id_${messageId}`].option;
+      console.log("subreddit =" +subreddit + "postnum = "+postNum)
+    if (db[userId] === undefined) {
+        //bot.answerCallbackQuery(msg.id);
+        return bot.sendMessage(
+          messageId,
+          "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+          { parse }
+        );
+      } else if (db[userId].hasOwnProperty("subreddit")) {
+        subreddit = db[userId]["subreddit"];
+      } else {
+        return bot.sendMessage(
+          messageId,
+          "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+          { parse }
+        );
+      }
+    //postNum = 1
+    logger.error("Failed to Load. Loading next post...")
+    userId = `id_${messageId}`;
+    if (db[userId].hasOwnProperty("postNum")) {
+      postNum = db[userId]["postNum"];
+      postNum= postNum + 1;
+    }
+    db[userId]["postNum"] = postNum;
+    if (db[userId]["option"]) {
+      option = db[userId]["option"];
+    } else {
+      //default sort = hot
+      option = "hot";
+    }
+
+    updateUser(messageId, subreddit, option, postNum+1);
+    sendRedditPost(messageId, subreddit, option, postNum+1);
+  });
   }
 
   if (redditPost.score >= 1000)
     var points = (redditPost.score / 1000).toFixed(1) + "k";
   else var points = redditPost.score;
-
+  
+  if(redditPost.subreddit == "explainlikeimfive")
+  {
+    var message = `🔖 <b>${redditPost.title}</b>\n
+📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  }
+  
+  else {
   var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  }
+  
   //\n\n${url}
 
   //nsfw indicator
   if (redditPost.over_18 === true) message = "🔞" + message;
   logger.info("Request completed: text thread");
+  var postNum = -1;
+  return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+    userId = `id_${messageId}`;
+    postNum = postNum + 1;
+    subreddit = redditPost.subreddit;
+    //option = db[`id_${messageId}`].option;
+    console.log("subreddit =" +subreddit + "postnum = "+postNum)
+  if (db[userId] === undefined) {
+      //bot.answerCallbackQuery(msg.id);
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+        { parse }
+      );
+    } else if (db[userId].hasOwnProperty("subreddit")) {
+      subreddit = db[userId]["subreddit"];
+    } else {
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+        { parse }
+      );
+    }
+  //postNum = 1
+  logger.error("Failed to Load. Loading next post...")
+  userId = `id_${messageId}`;
+  if (db[userId].hasOwnProperty("postNum")) {
+    postNum = db[userId]["postNum"];
+    postNum= postNum + 1;
+  }
+  db[userId]["postNum"] = postNum;
+  if (db[userId]["option"]) {
+    option = db[userId]["option"];
+  } else {
+    //default sort = hot
+    option = "hot";
+  }
 
-  return bot.sendMessage(messageId, message, { parse, markup });
+  updateUser(messageId, subreddit, option, postNum+1);
+  sendRedditPost(messageId, subreddit, option, postNum+1);
+});
+  });
+  }
+else {
+    //console.log(bestComment) 
+    let url = redditPost.url;
+    url = url.replace(/&amp;/g, "&");
+    //let boldtitle = redditPost.title
+    //post time
+    var timeago = prettytime(redditPost.created_utc * 1000 - Date.now(), {
+      short: true,
+      decimals: 0
+    });
+    timeago = timeago.replace(/\s/g, "");
+  
+    //FIX #19 rare cases when subreddits don't exist but still it detects as a textpost
+    try {
+      var validSub = redditPost.selftext.length;
+    } catch (err) {
+      logger.error("ERROR: "+err);
+      return sendErrorMsg(messageId);
+    }
+    var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
+    //if selftext exceeds limit
+    if (redditPost.selftext.length > 3700) {
+      if (redditPost.score >= 1000)
+        var points = (redditPost.score / 1000).toFixed(1) + "k";
+      else var points = redditPost.score;
+      const preview = redditPost.selftext.slice(0, 3500);
+      if(redditPost.subreddit == "explainlikeimfive")
+      {
+        const preview = bestComment.slice(0, 3500); 
+        var message = `🔖 <b>${redditPost.title}</b>\n
+📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n`+ preview + selfTextLimitExceeded(messageId) + `\n 
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+      }
+      else {
+      var message =
+        `🔖 <b>${redditPost.title}</b>\n\n📝` +
+        preview +
+        selfTextLimitExceeded(messageId) +
+        `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+      }
+      logger.info("Request completed: long text thread");
+      //nsfw indicator
+      if (redditPost.over_18 === true) message = "🔞" + message;
+      logger.info("Request completed: text thread");
+      return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+        userId = `id_${messageId}`;
+        postNum = postNum + 1;
+        subreddit = redditPost.subreddit;
+        //option = db[`id_${messageId}`].option;
+        console.log("subreddit =" +subreddit + "postnum = "+postNum)
+      if (db[userId] === undefined) {
+          //bot.answerCallbackQuery(msg.id);
+          return bot.sendMessage(
+            messageId,
+            "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+            { parse }
+          );
+        } else if (db[userId].hasOwnProperty("subreddit")) {
+          subreddit = db[userId]["subreddit"];
+        } else {
+          return bot.sendMessage(
+            messageId,
+            "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+            { parse }
+          );
+        }
+      //postNum = 1
+      logger.error("Failed to Load. Loading next post...")
+      userId = `id_${messageId}`;
+      if (db[userId].hasOwnProperty("postNum")) {
+        postNum = db[userId]["postNum"];
+        postNum= postNum + 1;
+      }
+      db[userId]["postNum"] = postNum;
+      if (db[userId]["option"]) {
+        option = db[userId]["option"];
+      } else {
+        //default sort = hot
+        option = "hot";
+      }
+  
+      updateUser(messageId, subreddit, option, postNum+1);
+      sendRedditPost(messageId, subreddit, option, postNum+1);
+    });
+    }
+  
+    if (redditPost.score >= 1000)
+      var points = (redditPost.score / 1000).toFixed(1) + "k";
+    else var points = redditPost.score;
+    
+    if(redditPost.subreddit == "explainlikeimfive")
+    {
+      var message = `🔖 <b>${redditPost.title}</b>\n
+📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+    }
+    
+    else {
+    var message = `🔖 <b>${redditPost.title}</b>\n
+📝 ${redditPost.selftext}\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+    }
+    
+    //\n\n${url}
+  
+    //nsfw indicator
+    if (redditPost.over_18 === true) message = "🔞" + message;
+    logger.info("Request completed: text thread");
+  
+    return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+      userId = `id_${messageId}`;
+      postNum = postNum + 1;
+      subreddit = redditPost.subreddit;
+      //option = db[`id_${messageId}`].option;
+      console.log("subreddit =" +subreddit + "postnum = "+postNum)
+    if (db[userId] === undefined) {
+        //bot.answerCallbackQuery(msg.id);
+        return bot.sendMessage(
+          messageId,
+          "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+          { parse }
+        );
+      } else if (db[userId].hasOwnProperty("subreddit")) {
+        subreddit = db[userId]["subreddit"];
+      } else {
+        return bot.sendMessage(
+          messageId,
+          "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+          { parse }
+        );
+      }
+    //postNum = 1
+    logger.error("Failed to Load. Loading next post...")
+    userId = `id_${messageId}`;
+    if (db[userId].hasOwnProperty("postNum")) {
+      postNum = db[userId]["postNum"];
+      postNum= postNum + 1;
+    }
+    db[userId]["postNum"] = postNum;
+    if (db[userId]["option"]) {
+      option = db[userId]["option"];
+    } else {
+      //default sort = hot
+      option = "hot";
+    }
+
+    updateUser(messageId, subreddit, option, postNum+1);
+    sendRedditPost(messageId, subreddit, option, postNum+1);
+  });
+}
 }
 
 /*bot.start(ctx => {

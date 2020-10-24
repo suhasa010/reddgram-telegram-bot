@@ -24,11 +24,13 @@ module.exports = featureList = `*Reddgram Features*
 
 2️⃣ 🆕 *Import subreddits* - Import your subreddits from reddit.com as _Subscriptions_ and get posts from them regularly. check /import.
 
-3️⃣ 🆕 *Multi Mode* - Fetch multiple threads at a time. eg. \`\/jokes hot 5\`
+3️⃣ 🆕 *Best Answer* - For r‏/explainlikeimfive subreddit, see the best answer for a Question.
 
-4️⃣ *Emoji Mode* - A new way to browse subreddits, the emoji way.
+4️⃣ 🆕 *Multi Mode* - Fetch multiple threads at a time. eg. \`\/jokes hot 5\`
 
-5️⃣ *Multireddit* - Combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` `
+5️⃣ *Emoji Mode* - A new way to browse subreddits, the emoji way.
+
+6️⃣ *Multireddit* - Combine multiple subreddits and browse your own multireddit. eg. \`/gifs+pics+videos\` `
 
 module.exports = inbuiltSubs = `*Some default subs that you can browse:*
 
