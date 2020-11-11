@@ -178,7 +178,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       if (
         /\.(jpe?g|png)$/.test(redditPost.url) ||
         redditPost.domain === "i.reddituploads.com" ||
-        redditPost.domain === "i.redd.it" ||
+        (/\.(jpe?g|png)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
         redditPost.domain === "imgur.com" ||
         redditPost.domain === "preview.reddit.com" ||
         redditPost.domain === "preview.redd.it"
@@ -446,9 +446,11 @@ function sendImagePost(messageId, redditPost, markup) {
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
+  var postNum = -1;
   //logger.info("about to send the post to telegram")
-  //fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"
-  return bot.sendMessage(messageId, caption, { parse, markup }).catch(err => {
+  //~~fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"~~ reverted back to sendPhoto for some layout refresh.
+  //return bot.sendMessage(messageId, caption, { parse, markup })
+  return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(err => {
     userId = `id_${messageId}`;
     postNum = postNum + 1;
     subreddit = redditPost.subreddit;
