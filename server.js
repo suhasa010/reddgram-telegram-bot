@@ -179,7 +179,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         /\.(jpe?g|png)$/.test(redditPost.url) ||
         redditPost.domain === "i.reddituploads.com" ||
         (/\.(jpe?g|png)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
-        redditPost.domain === "imgur.com" ||
+        (/\.(jpe?g|png)$/.test(redditPost.url) && redditPost.domain === "imgur.com") ||
         redditPost.domain === "preview.reddit.com" ||
         redditPost.domain === "preview.redd.it"
       ) {
@@ -196,13 +196,24 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         // sendPlsWait(messageId);
         sendGifPost(messageId, redditPost, markup);
       }
+      //animation
+      else if (
+        redditPost.domain === "v.redd.it" ||
+        (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
+        (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "i.imgur.com") ||
+        (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it") ||
+        redditPost.domain === "gfycat.com"
+      ) {
+        //bot.sendChatAction(messageId, "upload_video");
+        return sendAnimPost(messageId, redditPost, markup);
+      }      
       //video
       else if (
         redditPost.domain === "youtu.be" ||
         redditPost.domain === "youtube.com" ||
         redditPost.domain === "v.redd.it" ||
-        redditPost.domain === "i.redd.it" ||
-        redditPost.domain === "gfycat.com"
+        redditPost.domain === "i.redd.it" //||
+        //redditPost.domain === "gfycat.com"
       ) {
         //bot.sendChatAction(messageId, "upload_video");
         return sendVideoPost(messageId, redditPost, markup);
@@ -714,6 +725,44 @@ function sendGifPost(messageId, redditPost, markup) {
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
   return bot.sendVideo(messageId, gif, { parse, caption, markup })
+}
+
+function sendAnimPost(messageId, redditPost, markup) {
+  //let url = redditPost.url;
+  //url = url.replace(/&amp;/g, '&');
+  const parse = "HTML";
+  //let gifArr = redditPost.preview.images[0].variants.mp4.resolutions;
+  //if(redditPost.domain == "gfycat.com")
+    var gif;
+    if(redditPost.domain == "v.redd.it")
+      gif = redditPost.media.reddit_video.fallback_url;
+    else //if(redditPost.domain == "gfycat.com")
+      gif = redditPost.preview.reddit_video_preview.fallback_url;
+  
+    //if(redditPost.domain == "v.redd.it")
+    //let gif = redditPost.media.reddit_video.fallback_url;
+  
+    //gif = gif.replace(/&amp;/g, "&");
+  //post time
+  var timeago = prettytime(redditPost.created_utc * 1000 - Date.now(), {
+    short: true,
+    decimals: 0
+  });
+  console.log(gif)
+  if (redditPost.score >= 1000)
+    var points = (redditPost.score / 1000).toFixed(1) + "k";
+  else var points = redditPost.score;
+
+  var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
+
+  timeago = timeago.replace(/\s/g, "");
+  var caption = `🔖 <b>${redditPost.title}</b>\n
+⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
+  logger.info("Request completed: animgif thread");
+  //nsfw indicator
+  if (redditPost.over_18 === true) caption = "🔞" + caption;
+  return bot.sendAnimation(messageId, gif, { parse, caption, markup })
 }
 
 function sendVideoPost(messageId, redditPost, markup) {
