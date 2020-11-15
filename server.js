@@ -180,6 +180,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         redditPost.domain === "i.reddituploads.com" ||
         (/\.(jpe?g|png)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
         (/\.(jpe?g|png)$/.test(redditPost.url) && redditPost.domain === "imgur.com") ||
+        (/\.(jpe?g|png)/.test(redditPost.url) && redditPost.domain === "i.imgur.com") ||
         redditPost.domain === "preview.reddit.com" ||
         redditPost.domain === "preview.redd.it"
       ) {
@@ -198,10 +199,10 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       }
       //animation
       else if (
-        redditPost.domain === "v.redd.it" ||
-        (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
+        ( !redditPost.crosspost_parent && redditPost.domain === "v.redd.it") ||
+        (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
         (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "i.imgur.com") ||
-        (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it") ||
+        (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it") ||
         redditPost.domain === "gfycat.com"
       ) {
         //bot.sendChatAction(messageId, "upload_video");
@@ -498,8 +499,8 @@ function sendImagePost(messageId, redditPost, markup) {
     option = "hot";
   }
 
-  updateUser(messageId, subreddit, option, postNum+1);
-  sendRedditPost(messageId, subreddit, option, postNum+1);
+  updateUser(messageId, subreddit, option, postNum+2);
+  sendRedditPost(messageId, subreddit, option, postNum+2);
 });;
   // prev code line was return bot.sendPhoto(messageId, url, {caption, markup});
 }
@@ -517,7 +518,8 @@ function sendLinkPost(messageId, redditPost, markup) {
         }
         if(body[1].data.children[0].data.stickied === true) 
         bestComment = body[1].data.children[1].data.body; //skip stickied comment
-      else bestComment = body[1].data.children[0].data.body;        
+      else bestComment = body[1].data.children[0].data.body; 
+             
       }
       catch (error) {
         console.log(error);
@@ -529,8 +531,8 @@ function sendLinkPost(messageId, redditPost, markup) {
   //CLEAN THIS UP
   if(redditPost.subreddit == "explainlikeimfive")
   {
-    sleep(2000).then(() => { 
-  //console.log(bestComment) 
+    sleep(2500).then(() => { 
+  console.log(bestComment) 
   const parse = "HTML";
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
@@ -608,8 +610,8 @@ function sendLinkPost(messageId, redditPost, markup) {
     option = "hot";
   }
 
-  updateUser(messageId, subreddit, option, postNum+1);
-  sendRedditPost(messageId, subreddit, option, postNum+1);
+  updateUser(messageId, subreddit, option, postNum+2);
+  sendRedditPost(messageId, subreddit, option, postNum+2);
 });
   //*/
     });
@@ -692,8 +694,8 @@ function sendLinkPost(messageId, redditPost, markup) {
       option = "hot";
     }
 
-    updateUser(messageId, subreddit, option, postNum+1);
-    sendRedditPost(messageId, subreddit, option, postNum+1);
+    updateUser(messageId, subreddit, option, postNum+2);
+    sendRedditPost(messageId, subreddit, option, postNum+2);
   });
   }
 }
@@ -736,8 +738,12 @@ function sendAnimPost(messageId, redditPost, markup) {
     var gif;
     if(redditPost.domain == "v.redd.it")
       gif = redditPost.media.reddit_video.fallback_url;
-    else //if(redditPost.domain == "gfycat.com")
+    else if ((/\.(gif)$/.test(redditPost.url) && redditPost.domain == "i.imgur.com"))
+      gif = redditPost.url_overridden_by_dest;
+    else if(redditPost.domain == "gfycat.com")
       gif = redditPost.preview.reddit_video_preview.fallback_url;
+    else
+      gif = redditPost.preview.reddit_video_preview.fallback_url || redditPost.url;
   
     //if(redditPost.domain == "v.redd.it")
     //let gif = redditPost.media.reddit_video.fallback_url;
@@ -762,7 +768,47 @@ function sendAnimPost(messageId, redditPost, markup) {
   logger.info("Request completed: animgif thread");
   //nsfw indicator
   if (redditPost.over_18 === true) caption = "🔞" + caption;
-  return bot.sendAnimation(messageId, gif, { parse, caption, markup })
+  var postNum = -1;
+  return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(err => {
+    userId = `id_${messageId}`;
+    postNum = postNum + 1;
+    subreddit = redditPost.subreddit;
+    //option = db[`id_${messageId}`].option;
+    console.log("subreddit =" +subreddit + "postnum = "+postNum)
+  if (db[userId] === undefined) {
+      //bot.answerCallbackQuery(msg.id);
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, an error occurred. please re-submit your previous request.</i>",
+        { parse }
+      );
+    } else if (db[userId].hasOwnProperty("subreddit")) {
+      subreddit = db[userId]["subreddit"];
+    } else {
+      return bot.sendMessage(
+        messageId,
+        "<i>ERROR: Sorry, please send the subreddit name with option again.</i>",
+        { parse }
+      );
+    }
+  //postNum = 1
+  logger.error("Failed to Load. Loading next post...")
+  userId = `id_${messageId}`;
+  if (db[userId].hasOwnProperty("postNum")) {
+    postNum = db[userId]["postNum"];
+    postNum= postNum + 1;
+  }
+  db[userId]["postNum"] = postNum;
+  if (db[userId]["option"]) {
+    option = db[userId]["option"];
+  } else {
+    //default sort = hot
+    option = "hot";
+  }
+
+  updateUser(messageId, subreddit, option, postNum+2);
+  sendRedditPost(messageId, subreddit, option, postNum+2);
+});
 }
 
 function sendVideoPost(messageId, redditPost, markup) {
@@ -832,8 +878,8 @@ function sendVideoPost(messageId, redditPost, markup) {
     option = "hot";
   }
 
-  updateUser(messageId, subreddit, option, postNum+1);
-  sendRedditPost(messageId, subreddit, option, postNum+1);
+  updateUser(messageId, subreddit, option, postNum+2);
+  sendRedditPost(messageId, subreddit, option, postNum+2);
 });
 }
 
@@ -872,7 +918,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     sendBestComment(url)
   }
   if(redditPost.subreddit == "explainlikeimfive") {
-    sleep(2000).then(() => { 
+    sleep(2500).then(() => { 
   //console.log(bestComment) 
   let url = redditPost.url;
   url = url.replace(/&amp;/g, "&");
@@ -1023,8 +1069,8 @@ function sendMessagePost(messageId, redditPost, markup) {
     option = "hot";
   }
 
-  updateUser(messageId, subreddit, option, postNum+1);
-  sendRedditPost(messageId, subreddit, option, postNum+1);
+  updateUser(messageId, subreddit, option, postNum+2);
+  sendRedditPost(messageId, subreddit, option, postNum+2);
 });
   });
   }
@@ -1111,8 +1157,8 @@ else {
         option = "hot";
       }
   
-      updateUser(messageId, subreddit, option, postNum+1);
-      sendRedditPost(messageId, subreddit, option, postNum+1);
+      updateUser(messageId, subreddit, option, postNum+2);
+      sendRedditPost(messageId, subreddit, option, postNum+2);
     });
     }
   
@@ -1178,8 +1224,8 @@ else {
       option = "hot";
     }
 
-    updateUser(messageId, subreddit, option, postNum+1);
-    sendRedditPost(messageId, subreddit, option, postNum+1);
+    updateUser(messageId, subreddit, option, postNum+2);
+    sendRedditPost(messageId, subreddit, option, postNum+2);
   });
 }
 }
