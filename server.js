@@ -193,7 +193,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         redditPost.preview &&
         redditPost.preview.images[0].variants.mp4
       ) {
-        //bot.sendChatAction(messageId, "upload_video");
+        bot.sendChatAction(messageId, "upload_video");
         // sendPlsWait(messageId);
         sendGifPost(messageId, redditPost, markup);
       }
@@ -205,7 +205,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it") ||
         redditPost.domain === "gfycat.com"
       ) {
-        //bot.sendChatAction(messageId, "upload_video");
+        bot.sendChatAction(messageId, "upload_video");
         return sendAnimPost(messageId, redditPost, markup);
       }      
       //video
@@ -452,7 +452,7 @@ function sendImagePost(messageId, redditPost, markup) {
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
   var caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
 
   logger.info("Request completed: image/gif thread");
@@ -557,14 +557,14 @@ function sendLinkPost(messageId, redditPost, markup) {
     var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
       websitename[0]
     })</b>\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   }
   else {
   var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
     websitename[0]
   })</b>\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   }
   //<a href="${url}">[Link]</a>
@@ -641,14 +641,14 @@ function sendLinkPost(messageId, redditPost, markup) {
     var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
       websitename[0]
     })</b>\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   }
   else {
   var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${
     websitename[0]
   })</b>\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   }
   //<a href="${url}">[Link]</a>
@@ -721,7 +721,7 @@ function sendGifPost(messageId, redditPost, markup) {
 
   timeago = timeago.replace(/\s/g, "");
   var caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: gif thread");
   //nsfw indicator
@@ -763,7 +763,7 @@ function sendAnimPost(messageId, redditPost, markup) {
 
   timeago = timeago.replace(/\s/g, "");
   var caption = `🔖 <b>${redditPost.title}</b>\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: animgif thread");
   //nsfw indicator
@@ -835,7 +835,7 @@ function sendVideoPost(messageId, redditPost, markup) {
   var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
 
   var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: video/gif thread");
   //nsfw indicator
@@ -949,7 +949,7 @@ function sendMessagePost(messageId, redditPost, markup) {
       const preview = bestComment.slice(0, 3500); 
       var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n`+ preview + selfTextLimitExceeded(messageId) + `\n 
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
     }
     else {
@@ -957,7 +957,7 @@ function sendMessagePost(messageId, redditPost, markup) {
       `🔖 <b>${redditPost.title}</b>\n\n📝` +
       preview +
       selfTextLimitExceeded(messageId) +
-      `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+      `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
     }
     logger.info("Request completed: long text thread");
@@ -1015,14 +1015,14 @@ function sendMessagePost(messageId, redditPost, markup) {
   {
     var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   }
   
   else {
   var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   }
   
@@ -1105,7 +1105,7 @@ else {
         const preview = bestComment.slice(0, 3500); 
         var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n`+ preview + selfTextLimitExceeded(messageId) + `\n 
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
       }
       else {
@@ -1113,13 +1113,14 @@ else {
         `🔖 <b>${redditPost.title}</b>\n\n📝` +
         preview +
         selfTextLimitExceeded(messageId) +
-        `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+        `\n\n⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
       }
       logger.info("Request completed: long text thread");
       //nsfw indicator
       if (redditPost.over_18 === true) message = "🔞" + message;
       logger.info("Request completed: text thread");
+      var postNum = -1;
       return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
         userId = `id_${messageId}`;
         postNum = postNum + 1;
@@ -1170,14 +1171,14 @@ else {
     {
       var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
     }
     
     else {
     var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n
-⬆️ <b>${points}</b> (${upvote_ratio}%)   •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
+⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
     }
     
@@ -1186,7 +1187,7 @@ else {
     //nsfw indicator
     if (redditPost.over_18 === true) message = "🔞" + message;
     logger.info("Request completed: text thread");
-  
+    var postNum = -1;
     return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
       userId = `id_${messageId}`;
       postNum = postNum + 1;
@@ -1250,11 +1251,11 @@ bot.on("text", msg => {
     msg.text === "😅" ||
     msg.text === "🤣"
   )
-    msg.text = "/memes+jokes+funny+humor+programmerhumor+dadjokes+punny";
+    msg.text = "/memes+jokes+funny+humor+programmerhumor+dadjokes+punny+cursedcomments";
 
   if (msg.text === "🧐" || msg.text === "👀" || msg.text === "👁")
     msg.text =
-      "/pics+gifs+videos+educationalgifs+wholesomegifs+reactiongifs+perfectloops+photoshopbattles+historyporn+spaceporn+comics";
+      "/pics+gifs+videos+educationalgifs+wholesomegifs+reactiongifs+perfectloops+photoshopbattles+historyporn+spaceporn+earthporn+comics";
   if (msg.text === "🚿") msg.text = "/showerthoughts";
   if (msg.text === "😍")
     msg.text = "/aww+cats+dogs+animalsbeingderps+animalsbeingjerks";
@@ -1264,7 +1265,7 @@ bot.on("text", msg => {
   if (msg.text === "🦠") msg.text = "/coronavirus";
   if (msg.text === "🤔")
     msg.text =
-      "/todayilearned+youshouldknow+outoftheloop+wikipedia+howto+iwanttolearn+learnuselesstalents+diy";
+      "/todayilearned+explainlikeimfive+youshouldknow+outoftheloop+wikipedia+howto+iwanttolearn+learnuselesstalents+diy";
   if (
     msg.text === "😳" ||
     msg.text === "😱" ||
@@ -1679,7 +1680,9 @@ bot.on("text", msg => {
         var userId = `id_${msg.chat.id}`;
         const messageId = msg.chat.id;
         var postNum = 0;
-        const multiLimit = 5;
+        var multiLimit = 5;
+        if(msg.from.id == "15024063")
+          multiLimit = 100;
         if (/^[a-zA-Z0-9]+ [a-zA-Z]+ [0-9]+/.test(msg.text)) {
           var i;
 
@@ -1697,7 +1700,7 @@ bot.on("text", msg => {
           }
           else {
             logger.error("ERROR: User("+msg.from.id+") : " + msg.text);
-            return bot.sendMessage(messageId, `_ERROR: Sorry, we can't show more than ${multiLimit} threads in Multi Mode._`, { parse });
+            return bot.sendMessage(messageId, `_ERROR: Sorry, I can't show more than ${multiLimit} threads in Multi Mode._`, { parse });
           }
           //var numUserId = userId.replace(/[^0-9]/g,'');
         }
@@ -1732,12 +1735,13 @@ bot.on("callbackQuery", async msg => {
       option = "";
     let postNum = 0;
     if (db[userId] === undefined) {
-      await bot.answerCallbackQuery(msg.id);
-      return bot.sendMessage(
+      return bot.answerCallbackQuery(msg.id, { text: "ERROR: Sorry, please re-submit your previous request.", show_alert: true});
+      //return;
+      /*return bot.sendMessage(
         messageId,
         "_ERROR: Sorry, please re-submit your previous request._",
         { parse }
-      );
+      );*/
     } else if (db[userId].hasOwnProperty("subreddit")) {
       subreddit = db[userId]["subreddit"];
     } else {
@@ -2055,8 +2059,8 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-//bot.sendMessage(15024063, "A bug in Import function has been fixed. You can try importing again :)")
 
+//for posting subscriptions
 var subPostNum = 0;
 setInterval(function () {
   //var chat;
@@ -2122,7 +2126,7 @@ setInterval(function () {
   rand = rands[Math.floor(Math.random() * rands.length)];
   subPostNum = subPostNum + rand
   //console.log(chats)
-}, 1800 * 1000)
+}, 3600 * 1000)
 
 //reset hot Posts traversing index to 0 after 12 hours
 setInterval( function() {
