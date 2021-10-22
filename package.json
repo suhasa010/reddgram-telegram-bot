@@ -1,19 +1,18 @@
 {
-  "//1": "describes your app and its dependencies",
-  "//2": "https://docs.npmjs.com/files/package.json",
-  "//3": "updating this file will download and update your packages",
-  "name": "hello-express",
-  "version": "0.0.1",
-  "description": "A simple Node app built on Express, instantly up and running.",
+  "name": "reddgram-telegram-bot",
+  "version": "2.0.1",
+  "description": "Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
+    "@sentry/browser": "^6.8.0",
+    "@sentry/node": "^6.8.0",
+    "@sentry/tracing": "^6.8.0",
+    "ccipher": "1.0.2",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "logger": "^0.0.1",
-    "mongoose": "^5.10.7",
     "node-fetch": "^2.6.1",
     "prettytime": "^1.0.0",
     "redis": "^3.0.2",

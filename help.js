@@ -20,13 +20,13 @@ _Note: Default option is "hot", so /aww will return hottest threads from the pas
 
 module.exports = featureList = `*Reddgram Features*
 
-1️⃣ 🆕 *Subscriptions* - Subscribe to any subreddit by using \`\/sub subreddit_name\` and unsubscribe using \`/unsub subreddit_name\`
+1️⃣ *Subscriptions* - Subscribe to any subreddit by using \`\/sub subreddit_name\` and unsubscribe using \`/unsub subreddit_name\`
 
-2️⃣ 🆕 *Import subreddits* - Import your subreddits from reddit.com as _Subscriptions_ and get posts from them regularly. check /import.
+2️⃣ *Import subreddits* - Import your subreddits from reddit.com as _Subscriptions_ and get posts from them regularly. check /import.
 
-3️⃣ 🆕 *Best Answer* - For r‏/explainlikeimfive subreddit, see the best answer for a Question.
+3️⃣ *Best Answer* - For r‏/explainlikeimfive subreddit, see the best answer for a Question.
 
-4️⃣ 🆕 *Multi Mode* - Fetch multiple threads at a time. eg. \`\/jokes hot 5\`
+4️⃣ *Multi Mode* - Fetch multiple threads at a time. eg. \`\/jokes hot 5\`
 
 5️⃣ *Emoji Mode* - A new way to browse subreddits, the emoji way.
 
@@ -152,9 +152,7 @@ _Send any one of these emojis to browse the corresponding subreddit(s) a.k.a_ _s
 
 🥱😴 - subs that will haunt your sleep
 
-😎 - random
-
-🍑/🖕 - nsfw`;
+😎 - random`;
 
 module.exports = sortOptions = `*Sort Options*
 
@@ -244,7 +242,7 @@ I don't even know where that is!!
 <i>🔖 -> Post title, 📝 -> self-text(if any),  ⬆️ -> Upvotes, (95%) -> percentage of upvotes vs downvotes, 💬 -> Comments, ⏳ -> post creation time, ✏️ -> user who posted it, 🌐 -> subreddit.</i>
 
 <b>Is the bot open source? Can I create my own bot using Reddgram?</b>
-<i>Yes, Reddgram is open source and it is on <a href = "https://github.com/suhasa010/reddgram-telegram-bot">GitHub</a> under MIT License. You are free to clone/fork it and add your own features but with credits, of course (just like I credited the original creator).</i>
+<i>Yes, Reddgram is open source and it is on <a href = "https://github.com/suhasa010/reddgram-telegram-bot">GitHub</a> under GPLv3 Licence. You are free to clone/fork it and add your own features but with credits, of course (just like I credited the original creator).</i>
 
 <b>Will the bot be free forever?</b>
 <i>This started as a hobby project mainly for myself to browse reddit. As long as it is feasible for me to keep the bot hosted on my Raspberry Pi, it will be free.
