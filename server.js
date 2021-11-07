@@ -118,12 +118,12 @@ logger.format = function (level, date, message) {
 
 var parser = require("tld-extract");
 
-const TeleBot = require("telebot");
+const { Bot } = require("grammy");
 const fs = require("fs");
 const request = require("request");
 const BOT_TOKEN = process.env.BOT_TOKEN;
 
-var bot = new TeleBot(BOT_TOKEN);
+const bot = new Bot(BOT_TOKEN)
 var prettytime = require("prettytime");
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 const { features } = require('process');
@@ -212,7 +212,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         redditPost.preview.images[0].variants.mp4
       ) {
         bot.sendChatAction(messageId, "upload_video").catch( err => {
-          if (err.description.includes("bot was blocked")) {
+          if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
             logger.info(`user ${messageId}'s subscriptions were cleared`)
             return client.del(messageId)
           }
@@ -229,7 +229,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         redditPost.domain === "gfycat.com"
       ) {
         bot.sendChatAction(messageId, "upload_video").catch (err => {
-          if (err.description.includes("bot was blocked")) {
+          if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
             logger.info(`user ${messageId}'s subscriptions were cleared`)
             return client.del(messageId)
           }
@@ -265,13 +265,12 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
 
       // unsuccessful response
     }
-    catch (error) {
-      if (error.includes("bot was blocked")) {
+    catch (err) {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
         logger.info(`user ${messageId}'s subscriptions were cleared`)
         return client.del(messageId)
       }
-      print("error being thrown here")
-      console.log(error);
+      console.log(err);
     }
   };
   try {
@@ -496,7 +495,12 @@ function sendImagePost(messageId, redditPost, markup) {
       messageId,
       "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
       { parse }
-    );;
+    ).catch(err => {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+        logger.info(`user ${messageId}'s subscriptions were cleared`)
+        return client.del(messageId)
+      }
+    })
   } //caption = "🔞" + caption;
   else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
 
@@ -505,7 +509,7 @@ function sendImagePost(messageId, redditPost, markup) {
   //~~fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"~~ reverted back to sendPhoto for some layout refresh.
   //return bot.sendMessage(messageId, caption, { parse, markup })
   return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+    if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -571,11 +575,6 @@ function sendLinkPost(messageId, redditPost, markup) {
 
       }
       catch (error) {
-        if (error.description.includes("bot was blocked")) {
-          logger.info(`user ${messageId}'s subscriptions were cleared`)
-          return client.del(messageId)
-        }
-        print("error in link post")
         console.log(error);
       }
     }
@@ -624,7 +623,7 @@ function sendLinkPost(messageId, redditPost, markup) {
       if (redditPost.over_18 === true) message = "🔞" + message;
       var postNum = -1;
       bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
-        if (err.description.includes("bot was blocked")) {
+        if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
@@ -717,6 +716,10 @@ function sendLinkPost(messageId, redditPost, markup) {
 
     var postNum = -1;
     bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+        logger.info(`user ${messageId}'s subscriptions were cleared`)
+        return client.del(messageId)
+      }
       userId = `id_${messageId}`;
       postNum = postNum + 1;
       subreddit = redditPost.subreddit;
@@ -789,12 +792,17 @@ function sendGifPost(messageId, redditPost, markup) {
       messageId,
       "<i>ERROR: Sorry, in accordance with Telegram Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>\n <i>Apologies for the inconvenience.</i>",
       { parse }
-    );;
+    ).catch(err => {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+        logger.info(`user ${messageId}'s subscriptions were cleared`)
+        return client.del(messageId)
+      }
+    })
   } //message = "🔞" + message;
   else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
 
   return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+    if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -844,12 +852,17 @@ function sendAnimPost(messageId, redditPost, markup) {
       messageId,
       "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
       { parse }
-    );;
+    ).catch(err => {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+        logger.info(`user ${messageId}'s subscriptions were cleared`)
+        return client.del(messageId)
+      }
+    })
   } //caption = "🔞" + caption;
   else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
   var postNum = -1;
   return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+    if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -928,13 +941,18 @@ function sendVideoPost(messageId, redditPost, markup) {
       messageId,
       "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
       { parse }
-    );;
+    ).catch(err => {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+        logger.info(`user ${messageId}'s subscriptions were cleared`)
+        return client.del(messageId)
+      }
+    })
   } //message = "🔞" + message;
   else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) message = "🔞" + message;
 
   var postNum = -1;
   return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+    if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -1039,9 +1057,14 @@ function sendMessagePost(messageId, redditPost, markup) {
         if (redditPost.score >= 1000)
           var points = (redditPost.score / 1000).toFixed(1) + "k";
         else var points = redditPost.score;
-        const preview = redditPost.selftext.slice(0, 3500);
+        var preview = redditPost.selftext.slice(0, 3500);
         if (redditPost.subreddit == "explainlikeimfive") {
-          const preview = bestComment.slice(0, 3500);
+          preview = bestComment.slice(0, 3500);
+          if(preview == "undefined") {
+            sleep(3000).then(() => {
+              preview = bestComment.slice(0, 3500);
+            })
+          }
           var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n` + preview + selfTextLimitExceeded(messageId) + `\n 
 ⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
@@ -1061,6 +1084,10 @@ function sendMessagePost(messageId, redditPost, markup) {
         logger.info("Request completed: text thread");
         var postNum = -1;
         return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+          if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+            logger.info(`user ${messageId}'s subscriptions were cleared`)
+            return client.del(messageId)
+          }
           userId = `id_${messageId}`;
           postNum = postNum + 1;
           subreddit = redditPost.subreddit;
@@ -1107,6 +1134,11 @@ function sendMessagePost(messageId, redditPost, markup) {
       else var points = redditPost.score;
 
       if (redditPost.subreddit == "explainlikeimfive") {
+        if(bestComment == "undefined") {
+          sleep(3000).then(() => {
+            bestComment = bestComment.slice(0, 3500);
+          })
+        }
         var message = `🔖 <b>${redditPost.title}</b>\n
 📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n${bestComment}\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
@@ -1127,6 +1159,10 @@ function sendMessagePost(messageId, redditPost, markup) {
       logger.info("Request completed: text thread");
       var postNum = -1;
       return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+        if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+          logger.info(`user ${messageId}'s subscriptions were cleared`)
+          return client.del(messageId)
+        }
         userId = `id_${messageId}`;
         postNum = postNum + 1;
         subreddit = redditPost.subreddit;
@@ -1215,6 +1251,10 @@ function sendMessagePost(messageId, redditPost, markup) {
       logger.info("Request completed: text thread");
       var postNum = -1;
       return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+        if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+          logger.info(`user ${messageId}'s subscriptions were cleared`)
+          return client.del(messageId)
+        }
         userId = `id_${messageId}`;
         postNum = postNum + 1;
         subreddit = redditPost.subreddit;
@@ -1281,6 +1321,10 @@ function sendMessagePost(messageId, redditPost, markup) {
     logger.info("Request completed: text thread");
     var postNum = -1;
     return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+      if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
+        logger.info(`user ${messageId}'s subscriptions were cleared`)
+        return client.del(messageId)
+      }
       userId = `id_${messageId}`;
       postNum = postNum + 1;
       subreddit = redditPost.subreddit;
@@ -1330,7 +1374,7 @@ function sendMessagePost(messageId, redditPost, markup) {
   })
 */
 
-bot.on("text", msg => {
+bot.on("message", msg => {
   const parse = "Markdown";
   //emoji mode
   if (
@@ -1818,9 +1862,22 @@ bot.on("text", msg => {
 
 var userId;
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   if (msg.data === "callback_query_next") {
     //console.log("test")
+    console.log(msg.message.chat)
+    if(msg.message.chat.type === "group" || msg.message.chat.type === "supergroup") {
+      try{
+        //console.log(msg.from.id)
+        // console.log(!(bot.getChatMember(msg.message.chat.id,msg.from.id) in ["creator","administrator"]))
+        if (!(bot.getChatMember(msg.message.chat.id,msg.from.id) in ["creator","administrator"])) {
+          return bot.answerCallbackQuery(msg.id, { text: "ERROR: You need to be an admin to do this.", show_alert: true });
+        }
+      }
+      catch(e) {
+        console.log(e)
+      }
+    }
     const parse = "Markdown";
     userId = `id_${msg.message.chat.id}`;
     const messageId = msg.message.chat.id;
@@ -1869,7 +1926,7 @@ bot.on("callbackQuery", async msg => {
   }
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -1896,7 +1953,7 @@ bot.on("callbackQuery", async msg => {
   //}
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -1924,7 +1981,7 @@ bot.on("callbackQuery", async msg => {
   }
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -1945,7 +2002,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -1966,7 +2023,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -1987,7 +2044,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2008,7 +2065,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2029,7 +2086,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2050,7 +2107,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2071,7 +2128,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2092,7 +2149,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2113,7 +2170,7 @@ bot.on("callbackQuery", async msg => {
   await bot.answerCallbackQuery(msg.id);
 });
 
-bot.on("callbackQuery", async msg => {
+bot.on("callback_query", async msg => {
   /*if (/^-[0-9]+$/.test(msg.message.chat.id)) {
     var member = bot.getChatMember(msg.message.chat.id, msg.from.id);
     console.log(member)
@@ -2219,7 +2276,7 @@ setInterval(function () {
                     sendRedditPost(chat, sub, option, subPostNum);
                   }
                   catch (err) {
-                    if (err.description.includes("bot was blocked")) {
+                    if (err.description?.includes("bot was") || err.description?.includes("user is deactivated") || err.description?.includes("chat not found")) {
                       logger.info(`user ${messageId}'s subscriptions were cleared`)
                       client.del(msg.chat.id)
                     }
