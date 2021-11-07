@@ -33,7 +33,9 @@
     "express"
   ],
   "devDependencies": {
+    "@types/node-fetch": "^3.0.3",
     "chai": "^4.2.0",
-    "mocha": "^8.2.0"
+    "mocha": "^8.2.0",
+    "typescript": "^4.4.4"
   }
 }
