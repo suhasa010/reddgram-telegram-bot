@@ -13,6 +13,7 @@
     ],
     "repository": "https://github.com/suhasa010/reddgram-telegram-bot",
     "website": "https://t.me/suhasa010",
+    "logo": "https://repository-images.githubusercontent.com/263700794/aa1c0f80-f6e9-11ea-90ae-cb7664171a40",
     "success_url": "https://t.me/ssjprojects/15",
     "env": {
         "BOT_TOKEN": {
