@@ -1,26 +1,13 @@
-//Don't sleep
 const help = require('./help.js');
 const http = require("http");
 const express = require("express");
 require('dotenv').config();
 const fetch = require("node-fetch")
 
-const Sentry = require("@sentry/node");
-const Tracing = require("@sentry/tracing");
+// const Sentry = require("@sentry/node");
+// const Tracing = require("@sentry/tracing");
+// const m3u8stream = require('m3u8stream')
 
-Sentry.init({
-  dsn: "https://5222779e2d594b96815ed26ff756eb3b@o915566.ingest.sentry.io/5855972",
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  release: "reddgram@2.0.1",
-  tracesSampleRate: 0.5,
-  debug: false,
-});
-
-//const logRoutes = require("./routes/log.routes");
-//const initDB = require("./db");
-//const Log = require("./models/Log");
 //const app = express();
 
 //initDB();
@@ -29,6 +16,7 @@ Sentry.init({
 
 //app.use(logRoutes);
 
+//Keep alive service for hosts like glitch.me / vercel / repl.it etc
 /*
 app.get("/", (request, response) => {
   console.log(Date.now() + " Ping Received");
@@ -52,42 +40,18 @@ const isOwner = (req, res, next) => {
 app.use('/static', isOwner, express.static(__dirname));
 */
 
+// For Glitch.me hosting
 /*setInterval(() => {
   http.get(`http://${process.env.PROJECT_DOMAIN}.glitch.me/`);
 }, 200000);
 */
 
-/*const MongoClient = require('mongodb').MongoClient;
-const uri = process.env.DB_URI;
-const client = new MongoClient(uri, { useNewUrlParser: true });
-client.connect(err => {
-  const collection = client.db("test").collection("devices");
-  // perform actions on the collection object
-  collection.collection("devices").insertOne({name:"suhasa"}, function(err, res) {
-    if (err) throw err;
-    console.log("1 document inserted");
-    db.close();
-  });
-  client.close();
-});
-*/
-
 const redis = require("redis");
-const client = redis.createClient();
-
-client.on("error", function (error) {
-  console.error(error);
-  Sentry.captureException(error);
+const client = redis.createClient({
+  host: process.env.REDIS_HOST,
+  port: process.env.PORT
 });
 
-//client.get("15024063",redis.print);
-
-/*
-client.set("key", "value", redis.print);
-client.get("key", redis.print);
-client.set("foo", "bar");
-client.get("foo", redis.print);
-*/
 var logger = require("ccipher").createLogger(); // logs to STDOUT
 // var logger = require("logger").createLogger("/home/pi/reddgram-telegram-bot/development.log"); // logs to a file
 
@@ -128,6 +92,12 @@ var prettytime = require("prettytime");
 const { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } = require("constants");
 const { features } = require('process');
 
+// bot.on(/(\.stream)*/, async msg => {
+//   await msg.reply.text("Hi")
+//   await m3u8stream('https://v.redd.it/7z24u5wpp2z71/HLSPlaylist.m3u8')
+//     .pipe(fs.createWriteStream('videofile.mp4'));
+//   await msg.reply.video('videofile.mp4')
+// })
 
 let db = {};
 let rLimit = 100;
@@ -211,8 +181,8 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         redditPost.preview &&
         redditPost.preview.images[0].variants.mp4
       ) {
-        bot.sendChatAction(messageId, "upload_video").catch( err => {
-          if (err.description.includes("bot was blocked")) {
+        bot.sendChatAction(messageId, "upload_video").catch( error => {
+          if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
             logger.info(`user ${messageId}'s subscriptions were cleared`)
             return client.del(messageId)
           }
@@ -228,8 +198,8 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it") ||
         redditPost.domain === "gfycat.com"
       ) {
-        bot.sendChatAction(messageId, "upload_video").catch (err => {
-          if (err.description.includes("bot was blocked")) {
+        bot.sendChatAction(messageId, "upload_video").catch (error => {
+          if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
             logger.info(`user ${messageId}'s subscriptions were cleared`)
             return client.del(messageId)
           }
@@ -266,7 +236,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       // unsuccessful response
     }
     catch (error) {
-      if (error.includes("bot was blocked")) {
+      if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
         logger.info(`user ${messageId}'s subscriptions were cleared`)
         return client.del(messageId)
       }
@@ -491,21 +461,21 @@ function sendImagePost(messageId, redditPost, markup) {
 
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
+  if (redditPost.over_18 === true) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
       "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
       { parse }
     );;
   } //caption = "🔞" + caption;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
+  else if (redditPost.over_18 === true ) caption = "🔞" + caption;
 
   var postNum = -1;
   //logger.info("about to send the post to telegram")
   //~~fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"~~ reverted back to sendPhoto for some layout refresh.
   //return bot.sendMessage(messageId, caption, { parse, markup })
-  return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+  return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(error => {
+    if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -571,7 +541,7 @@ function sendLinkPost(messageId, redditPost, markup) {
 
       }
       catch (error) {
-        if (error.description.includes("bot was blocked")) {
+        if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
@@ -623,8 +593,8 @@ function sendLinkPost(messageId, redditPost, markup) {
       //nsfw indicator
       if (redditPost.over_18 === true) message = "🔞" + message;
       var postNum = -1;
-      bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
-        if (err.description.includes("bot was blocked")) {
+      bot.sendMessage(messageId, message, { parse, markup }).catch(error => {
+        if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
@@ -706,7 +676,7 @@ function sendLinkPost(messageId, redditPost, markup) {
     logger.info("Request completed: link thread");
     //console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
     //nsfw indicator
-    if (redditPost.over_18 === true && messageId != "15024063")
+    if (redditPost.over_18 === true)
       /* { console.log("no nsfw!"); return bot.sendMessage(
         messageId,
         "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>\n<i>Apologies for the inconvenience.</i>",
@@ -784,17 +754,17 @@ function sendGifPost(messageId, redditPost, markup) {
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: gif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
+  if (redditPost.over_18 === true) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
       "<i>ERROR: Sorry, in accordance with Telegram Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>\n <i>Apologies for the inconvenience.</i>",
       { parse }
     );;
   } //message = "🔞" + message;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
+  else if (redditPost.over_18 === true) caption = "🔞" + caption;
 
-  return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+  return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(error => {
+    if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -839,17 +809,17 @@ function sendAnimPost(messageId, redditPost, markup) {
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: animgif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
+  if (redditPost.over_18 === true) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
       "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
       { parse }
     );;
   } //caption = "🔞" + caption;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
+  else if (redditPost.over_18 === true) caption = "🔞" + caption;
   var postNum = -1;
-  return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+  return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(error => {
+    if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -923,18 +893,18 @@ function sendVideoPost(messageId, redditPost, markup) {
   logger.info("Request completed: video/gif thread");
 
   //nsfw indicator
-  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
+  if (redditPost.over_18 === true) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
       "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
       { parse }
     );;
   } //message = "🔞" + message;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) message = "🔞" + message;
+  else if (redditPost.over_18 === true) message = "🔞" + message;
 
   var postNum = -1;
-  return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
-    if (err.description.includes("bot was blocked")) {
+  return bot.sendMessage(messageId, message, { parse, markup }).catch(error => {
+    if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -1330,6 +1300,8 @@ function sendMessagePost(messageId, redditPost, markup) {
   })
 */
 
+
+
 bot.on("text", msg => {
   const parse = "Markdown";
   //emoji mode
@@ -1385,7 +1357,7 @@ bot.on("text", msg => {
       "/productivity+happy+getmotivated+selfimprovement+quotesporn+fitness";
   //~~middle finger emoji~~ TOS violation - hence removed
 
-  if ((msg.chat.id == "15024063" || msg.chat.id == "576693302") && (msg.text.includes("🖕") || msg.text === "🍑"))
+  if ((msg.text.includes("🖕") || msg.text === "🍑"))
     msg.text =
       "/nsfw+gonewild+nsfw_gifs+celebnsfw+nsfw_gif+sexygirls+toocuteforporn+justhotwomen+sexybutnotporn";
 
@@ -2218,8 +2190,8 @@ setInterval(function () {
                   try {
                     sendRedditPost(chat, sub, option, subPostNum);
                   }
-                  catch (err) {
-                    if (err.description.includes("bot was blocked")) {
+                  catch (error) {
+                    if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
                       logger.info(`user ${messageId}'s subscriptions were cleared`)
                       client.del(msg.chat.id)
                     }
@@ -2239,39 +2211,6 @@ setInterval(function () {
   subPostNum = subPostNum + rand
   //console.log(chats)
 }, 3600 * 1000)
-
-/*//for Suhasa's private channel
-setInterval(function () {
-  //var chat;
-  client
-    .multi()
-    .keys("*")
-    .exec(function (err, replies) {
-      replies.forEach(function (reply, index) {
-        var chats = reply.toString().split(",")
-        chats.forEach(function (chat) {
-          //this is for testing subscriptions on myself
-          if (chat == "-1001200692277") {
-            client.get(15024063, function (err, reply) {
-              if (reply !== "") {
-                const sub = reply;
-                option = "hot";
-                const userId = `id_15024063`;
-                updateUser(userId, sub, option, subPostNum);
-                sleep(200).then(() => { sendRedditPost(chat, sub, option, subPostNum);  });
-                logger.info("Posted to "+ chat + "from " + sub + " subreddit ")
-              }
-            });
-          }
-        });
-      });
-    });
-  //console.log("postnumber " + subPostNum)
-  rands = Array(1,2,3);
-  rand = rands[Math.floor(Math.random() * rands.length)];
-  subPostNum = subPostNum + rand
-  //console.log(chats)
-}, 20 * 1000)*/
 
 //reset hot Posts traversing index to 0 after 12 hours
 setInterval(function () {

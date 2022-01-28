@@ -1,0 +1,38 @@
+{
+    "name": "Reddgram Bot",
+    "description": "Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!",
+    "keywords": [
+        "telegram",
+        "bot",
+        "reddit",
+        "browse",
+        "images",
+        "videos",
+        "memes",
+        "gifs"
+    ],
+    "repository": "https://github.com/suhasa010/reddgram-telegram-bot",
+    "website": "https://t.me/suhasa010",
+    "success_url": "https://t.me/ssjprojects/15",
+    "env": {
+        "BOT_TOKEN": {
+            "description": "Get this value from @BotFather > New Bot > API Token"
+        },
+        "HOST": {
+            "description": "Hostname of the redis server from redislabs or localhost if you're hosting it locally"
+        },
+        "PORT": {
+            "description": "Enter Port number of redis host"
+        }
+    },
+    "buildpacks": [{
+        "url": "heroku/nodejs"
+    }],
+    "formation": {
+        "worker": {
+            "quantity": 1,
+            "size": "free"
+        }
+    },
+    "stack": "heroku-20"
+}

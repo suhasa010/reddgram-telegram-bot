@@ -2,6 +2,8 @@
 
 **Browse all of Reddit's pics, gifs, videos, cats, news, memes and much more right here from Telegram!**
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/suhasa010/reddgram-telegram-bot)
+
 New features: 
 *EMOJI MODE* -- /emoji A new way to browse subreddits.
 *Multireddit* -- Now combine multiple subreddits and browse your own multireddit. eg. /gifs+pics+videos (long press to copy)
