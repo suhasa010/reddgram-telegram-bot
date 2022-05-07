@@ -9,16 +9,6 @@ const Tracing = require("@sentry/tracing");
 // const m3u8stream = require('m3u8stream')
 
 
-Sentry.init({
-  dsn: "https://5222779e2d594b96815ed26ff756eb3b@o915566.ingest.sentry.io/5855972",
-
-  // We recommend adjusting this value in production, or using tracesSampler
-  // for finer control
-  release: "reddgram@2.0.1",
-  tracesSampleRate: 0.5,
-  debug: false,
-});
-
 //const app = express();
 
 //initDB();
