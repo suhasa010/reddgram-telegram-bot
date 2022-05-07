@@ -14,7 +14,7 @@
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "m3u8stream": "^0.8.4",
-    "node-fetch": "^2.6.1",
+    "node-fetch": "^2.6.7",
     "prettytime": "^1.0.0",
     "redis": "^3.0.2",
     "telebot": "^1.4.1",
