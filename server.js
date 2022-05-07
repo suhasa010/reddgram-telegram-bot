@@ -4,9 +4,20 @@ const express = require("express");
 require('dotenv').config();
 const fetch = require("node-fetch")
 
-// const Sentry = require("@sentry/node");
-// const Tracing = require("@sentry/tracing");
+const Sentry = require("@sentry/node");
+const Tracing = require("@sentry/tracing");
 // const m3u8stream = require('m3u8stream')
+
+
+Sentry.init({
+  dsn: "https://5222779e2d594b96815ed26ff756eb3b@o915566.ingest.sentry.io/5855972",
+
+  // We recommend adjusting this value in production, or using tracesSampler
+  // for finer control
+  release: "reddgram@2.0.1",
+  tracesSampleRate: 0.5,
+  debug: false,
+});
 
 //const app = express();
 
@@ -51,6 +62,12 @@ const client = redis.createClient({
   host: process.env.REDIS_HOST,
   port: process.env.PORT
 });
+
+client.on("error", function (error) {
+  console.error(error);
+  Sentry.captureException(error);
+});
+
 
 var logger = require("ccipher").createLogger(); // logs to STDOUT
 // var logger = require("logger").createLogger("/home/pi/reddgram-telegram-bot/development.log"); // logs to a file
@@ -149,6 +166,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       redditPost.title = redditPost.title.replace(/&amp;/g, "&");
 
       // inline buttons
+      encoded = encodeURI(redditPost.title);
       const markup = bot.inlineKeyboard([
         [
           //bot.inlineButton('🔗 Reddit', { url: `https://www.reddit.com${redditPost.permalink}` }),
@@ -156,11 +174,12 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             url: `https://www.reddit.com${redditPost.permalink}`
           }),
           bot.inlineButton("↗️ Share", {
-            url: `https://t.me/share/url?text=🔖 ${redditPost.title}\n\n↗️ Shared via @RedditBrowserBot&url=https%3A//www.reddit.com${redditPost.permalink}`
+            url: `https://t.me/share/url?text=\n🔖 ${encoded}\n\n↗️ Shared via @RedditBrowserBot&url=https%3A//www.reddit.com${redditPost.permalink}`
           }),
           bot.inlineButton("▶️ Next", { callback: "callback_query_next" })
         ]
       ]);
+      // console.log(redditPost.permalink + " " + redditPost.title)
 
       // if post is an image or if it's a gif or a link
       if (
@@ -461,26 +480,55 @@ function sendImagePost(messageId, redditPost, markup) {
 
   logger.info("Request completed: image/gif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true) {
+  console.log(redditPost.over_18)
+  console.log(messageId)
+  if (redditPost.over_18 === true && (messageId != 15024063 || messageId != 576693302)) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
-      "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
-      { parse }
+      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+      { parse , webPreview: false}
     );;
   } //caption = "🔞" + caption;
-  else if (redditPost.over_18 === true ) caption = "🔞" + caption;
+  else if (redditPost.over_18 === true && (messageId == 15024063 || messageId == 576693302)) caption = "🔞" + caption;
 
   var postNum = -1;
+  if(redditPost.is_gallery == true) {
+    count = 0
+    allMedia = []
+    redditPost.gallery_data.items.forEach( (media) => {
+      media = redditPost.gallery_data.items[count]
+      image = redditPost.media_metadata[`${media.media_id}`].s.u
+      if(count < 10)
+      {
+        allMedia.push({type: 'photo', media: `${image.replace(/&amp;/g, "&")}`})
+      }
+      count = count + 1
+    });
+    try
+    {
+      bot.sendMediaGroup(messageId,
+      allMedia
+    ).then(() => {
+      // sleep(4000)
+      return bot.sendMessage(messageId, message, {parse, markup})
+    })
+    }
+    catch(err){
+        console.log("Error Sending Media", err);
+    }
+  }
   //logger.info("about to send the post to telegram")
   //~~fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"~~ reverted back to sendPhoto for some layout refresh.
   //return bot.sendMessage(messageId, caption, { parse, markup })
-  return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(error => {
+  else {
+    return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(error => {
     if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
-    }
+        }
+      }
+    )
   }
-  )
   /*.catch(err => {
     userId = `id_${messageId}`;
     postNum = postNum + 1;
@@ -549,12 +597,7 @@ function sendLinkPost(messageId, redditPost, markup) {
         console.log(error);
       }
     }
-    sendBestComment(url)
-  }
-
-  //CLEAN THIS UP
-  if (redditPost.subreddit == "explainlikeimfive") {
-    sleep(2500).then(() => {
+    sendBestComment(url).then(() => {
       console.log(bestComment)
       const parse = "HTML";
       let url = redditPost.url;
@@ -676,7 +719,7 @@ function sendLinkPost(messageId, redditPost, markup) {
     logger.info("Request completed: link thread");
     //console.info("link post failing ... "+messageId+" "+message+ " "+ parse + " "+ markup)
     //nsfw indicator
-    if (redditPost.over_18 === true)
+    if (redditPost.over_18 === true && messageId != "15024063")
       /* { console.log("no nsfw!"); return bot.sendMessage(
         messageId,
         "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>\n<i>Apologies for the inconvenience.</i>",
@@ -686,7 +729,35 @@ function sendLinkPost(messageId, redditPost, markup) {
     //else if (redditPost.over_18 === true && messageId == "15024063") message = "🔞" + message;
 
     var postNum = -1;
-    bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+
+    // Gallery support
+    if(redditPost.is_gallery == true) {
+      count = 0
+      allMedia = []
+      redditPost.gallery_data.items.forEach( (media) => {
+        media = redditPost.gallery_data.items[count]
+        image = redditPost.media_metadata[`${media.media_id}`].s.u
+        if(count < 10)
+        {
+          allMedia.push({type: 'photo', media: `${image.replace(/&amp;/g, "&")}`})
+        }
+        count = count + 1
+      });
+      try
+      {
+        bot.sendMediaGroup(messageId,
+        allMedia
+      ).then(() => {
+        sleep(4000)
+        return bot.sendMessage(messageId, message, {parse, markup})
+      })
+      }
+      catch(err){
+          console.log("Error Sending Media", err);
+      }
+      }
+    else {
+      bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
       userId = `id_${messageId}`;
       postNum = postNum + 1;
       subreddit = redditPost.subreddit;
@@ -727,6 +798,7 @@ function sendLinkPost(messageId, redditPost, markup) {
       sendRedditPost(messageId, subreddit, option, postNum + 2);
     });
   }
+  }
 }
 
 function sendGifPost(messageId, redditPost, markup) {
@@ -754,14 +826,14 @@ function sendGifPost(messageId, redditPost, markup) {
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: gif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true) {
+  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
-      "<i>ERROR: Sorry, in accordance with Telegram Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>\n <i>Apologies for the inconvenience.</i>",
-      { parse }
+      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+      { parse , webPreview: false }
     );;
   } //message = "🔞" + message;
-  else if (redditPost.over_18 === true) caption = "🔞" + caption;
+  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
 
   return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(error => {
     if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
@@ -809,14 +881,14 @@ function sendAnimPost(messageId, redditPost, markup) {
 ✏️ u/${redditPost.author}  •  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: animgif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true) {
+  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
-      "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
-      { parse }
+      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+      { parse , webPreview: false }
     );;
   } //caption = "🔞" + caption;
-  else if (redditPost.over_18 === true) caption = "🔞" + caption;
+  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
   var postNum = -1;
   return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(error => {
     if (error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
@@ -893,14 +965,14 @@ function sendVideoPost(messageId, redditPost, markup) {
   logger.info("Request completed: video/gif thread");
 
   //nsfw indicator
-  if (redditPost.over_18 === true) {
+  if (redditPost.over_18 === true && (messageId != "15024063" || messageId != "576693302")) {
     console.log("no nsfw!"); return bot.sendMessage(
       messageId,
-      "<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub " + redditPost.subreddit + "</code>",
-      { parse }
+      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+      { parse , webPreview: false }
     );;
   } //message = "🔞" + message;
-  else if (redditPost.over_18 === true) message = "🔞" + message;
+  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) message = "🔞" + message;
 
   var postNum = -1;
   return bot.sendMessage(messageId, message, { parse, markup }).catch(error => {
@@ -981,10 +1053,7 @@ function sendMessagePost(messageId, redditPost, markup) {
         console.log(error);
       }
     }
-    sendBestComment(url)
-  }
-  if (redditPost.subreddit == "explainlikeimfive") {
-    sleep(2500).then(() => {
+    sendBestComment(url).then(() => {
       //console.log(bestComment) 
       let url = redditPost.url;
       url = url.replace(/&amp;/g, "&");
@@ -1357,7 +1426,7 @@ bot.on("text", msg => {
       "/productivity+happy+getmotivated+selfimprovement+quotesporn+fitness";
   //~~middle finger emoji~~ TOS violation - hence removed
 
-  if ((msg.text.includes("🖕") || msg.text === "🍑"))
+  if ((msg.chat.id == "15024063" || msg.chat.id == "576693302") && (msg.text.includes("🖕") || msg.text === "🍑"))
     msg.text =
       "/nsfw+gonewild+nsfw_gifs+celebnsfw+nsfw_gif+sexygirls+toocuteforporn+justhotwomen+sexybutnotporn";
 
@@ -1374,6 +1443,7 @@ bot.on("text", msg => {
     skips = 0;
     const message = helpMessage;
     logger.info("User(" + msg.from.id + ") : " + msg.text);
+    bot.sendMessage("-1001454024330", "#START\n\n"+msg.from.first_name+" ("+msg.from.id+")");
     const markup = bot.inlineKeyboard(
       [
         [
@@ -1522,6 +1592,7 @@ bot.on("text", msg => {
               }
               else {
                 logger.info("SUCCESSFULLY SUBBED: User(" + msg.from.id + ") : " + msg.text);
+                bot.sendMessage("-1001454024330", "#SUBSCRIBE\n\n"+ msg.from.first_name +" (" + msg.from.id + ")\n" + subreddit);
                 client.APPEND(msg.chat.id, `${subreddit}+`, function (err, res) {
                   return bot.sendMessage(msg.chat.id, `_Yay! Successfully subscribed to r‏/${subreddit} 🥳\nSee it here -_ /subscriptions`, { parse })
                 });
@@ -1581,7 +1652,12 @@ bot.on("text", msg => {
             })
           ]
         ]);
-        return bot.sendMessage(msg.chat.id, subscriptions, { parse, markup });
+        subLen = subscriptions.length
+        if(subLen > 4000) {
+          bot.sendMessage(msg.chat.id, subscriptions.substr(0,4000))
+          return bot.sendMessage(msg.chat.id, subscriptions.substr(4000,subLen), { parse, markup });
+        }
+        else return bot.sendMessage(msg.chat.id, subscriptions, { parse, markup });
       }
     });
   }
@@ -1777,6 +1853,7 @@ bot.on("text", msg => {
           //console.log(userId+subreddit+option+postNum);
           updateUser(userId, subreddit, option, postNum);
           sendRedditPost(messageId, subreddit, option, postNum);
+          bot.sendMessage("-1001454024330", "#BROWSE\n\n"+ msg.from.first_name +" (" + msg.from.id + ")\n" + subreddit);
         }
         //console.log("main logic");
         //console.log("message info="+msg)
@@ -2211,6 +2288,39 @@ setInterval(function () {
   subPostNum = subPostNum + rand
   //console.log(chats)
 }, 3600 * 1000)
+
+/*//for Suhasa's private channel
+setInterval(function () {
+  //var chat;
+  client
+    .multi()
+    .keys("*")
+    .exec(function (err, replies) {
+      replies.forEach(function (reply, index) {
+        var chats = reply.toString().split(",")
+        chats.forEach(function (chat) {
+          //this is for testing subscriptions on myself
+          if (chat == "-1001200692277") {
+            client.get(15024063, function (err, reply) {
+              if (reply !== "") {
+                const sub = reply;
+                option = "hot";
+                const userId = `id_15024063`;
+                updateUser(userId, sub, option, subPostNum);
+                sleep(200).then(() => { sendRedditPost(chat, sub, option, subPostNum);  });
+                logger.info("Posted to "+ chat + "from " + sub + " subreddit ")
+              }
+            });
+          }
+        });
+      });
+    });
+  //console.log("postnumber " + subPostNum)
+  rands = Array(1,2,3);
+  rand = rands[Math.floor(Math.random() * rands.length)];
+  subPostNum = subPostNum + rand
+  //console.log(chats)
+}, 20 * 1000)*/
 
 //reset hot Posts traversing index to 0 after 12 hours
 setInterval(function () {
