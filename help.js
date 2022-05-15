@@ -237,9 +237,9 @@ module.exports = faq = `<b>FAQs</b>
 📝 Just bought a T.V. and it said, "Built in Antenna".
 I don't even know where that is!!
 ⬆️ 10.1k (95%)   •  💬 136  •  ⏳ 6h ago
-✏️ u/VERBERD  •  🌐 r‏/Jokes</code>
+✏️ u/VERBERD  •  🏅2  •  🌐 r‏/Jokes</code>
 
-<i>🔖 -> Post title, 📝 -> self-text(if any),  ⬆️ -> Upvotes, (95%) -> percentage of upvotes vs downvotes, 💬 -> Comments, ⏳ -> post creation time, ✏️ -> user who posted it, 🌐 -> subreddit.</i>
+<i>🔖 -> Post title, 📝 -> self-text(if any),  ⬆️ -> Upvotes, (95%) -> percentage of upvotes vs downvotes, 💬 -> Comments, ⏳ -> post creation time, ✏️ -> user who posted it, 🏅2 -> no. of awards received, 🌐 -> subreddit.</i>
 
 <b>Is the bot open source? Can I create my own bot using Reddgram?</b>
 <i>Yes, Reddgram is open source and it is on <a href = "https://github.com/suhasa010/reddgram-telegram-bot">GitHub</a> under GPLv3 Licence. You are free to clone/fork it and add your own features but with credits, of course (just like I credited the original creator).</i>
