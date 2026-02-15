@@ -172,7 +172,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       const markup = bot.inlineKeyboard([
         [
           bot.inlineButton("📬 Subscribe", { callback: `callback_query_subscribe ${redditPost.subreddit}` }),
-          bot.inlineButton("💬 Comments", { callback: `callback_query_comments ${redditPost.subreddit} ${redditPost.id}` })
+          bot.inlineButton("🆕 Comments", { callback: `callback_query_comments ${redditPost.subreddit} ${redditPost.id}` })
         ],
         [
           //bot.inlineButton('🔗 Reddit', { url: `https://www.reddit.com${redditPost.permalink}` }),
@@ -430,7 +430,8 @@ const parse = "HTML";
 function sendErrorMsg(messageId, subreddit) {
   const errorMsg = `<i>ERROR: Couldn't find the subreddit: "${subreddit}". Use /help for instructions.</i>`;
   logger.error(errorMsg);
-  return bot.sendMessage(messageId, errorMsg, { parse });
+  //return bot.sendMessage(messageId, errorMsg, { parse });
+  return;
 }
 
 function sendLimitMsg(messageId) {
@@ -441,7 +442,7 @@ Use /help for instructions._`;
 }
 
 function selfTextLimitExceeded(messageId) {
-  const errorMsg = `......\n\n<i>ERROR: Sorry, The content of this thread has exceeded the limit. Please click on Comments button to view the full thread or Next button to try and load the next thread....</i>`;
+  const errorMsg = `......\n\n<i>ERROR: Sorry, The content of this thread has exceeded the limit. Please click on Link button to view the full thread or Next button to try and load the next thread....</i>`;
   logger.error(errorMsg);
   return errorMsg;
 }
@@ -485,7 +486,7 @@ function sendImagePost(messageId, redditPost, markup) {
   }
   else
     var no_awards = ""
-  var caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+  var caption = `🔖 <a href="${url}">${redditPost.title}</a> <b>(<a href="${redditPost.permalink}">${site}</a>)</b>\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  ${no_awards}•  🌐 r‏/${redditPost.subreddit}`;
 
@@ -493,14 +494,14 @@ function sendImagePost(messageId, redditPost, markup) {
   //nsfw indicator
   console.log(redditPost.over_18)
   console.log(messageId)
-  if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
-    console.log("no nsfw!"); return bot.sendMessage(
-      messageId,
-      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
-      { parse , webPreview: false}
-    );;
-  } //caption = "🔞" + caption;
-  else if (redditPost.over_18 === true) caption = "🔞" + caption;
+  // if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
+  //   console.log("no nsfw!"); return bot.sendMessage(
+  //     messageId,
+  //     `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+  //     { parse , webPreview: false}
+  //   );;
+  // } //caption = "🔞" + caption;
+  if (redditPost.over_18 === true) caption = "🔞" + caption;
 
   var postNum = -1;
   if(redditPost.is_gallery == true) {
@@ -866,14 +867,14 @@ function sendGifPost(messageId, redditPost, markup) {
 ✏️ u/${redditPost.author}  ${no_awards}•  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: gif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
-    console.log("no nsfw!"); return bot.sendMessage(
-      messageId,
-      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
-      { parse , webPreview: false }
-    );;
-  } //message = "🔞" + message;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
+  // if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
+  //   console.log("no nsfw!"); return bot.sendMessage(
+  //     messageId,
+  //     `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+  //     { parse , webPreview: false }
+  //   );;
+  // } //message = "🔞" + message;
+  if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
 
   return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(error => {
     if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
@@ -926,14 +927,14 @@ function sendAnimPost(messageId, redditPost, markup) {
 ✏️ u/${redditPost.author}  ${no_awards}•  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: animgif thread");
   //nsfw indicator
-  if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
-    console.log("no nsfw!"); return bot.sendMessage(
-      messageId,
-      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
-      { parse , webPreview: false }
-    );;
-  } //caption = "🔞" + caption;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
+  // if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
+  //   console.log("no nsfw!"); return bot.sendMessage(
+  //     messageId,
+  //     `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+  //     { parse , webPreview: false }
+  //   );;
+  // } //caption = "🔞" + caption;
+  if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
   var postNum = -1;
   return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(error => {
     if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
@@ -1008,20 +1009,20 @@ function sendVideoPost(messageId, redditPost, markup) {
   }
   else
     var no_awards = ""
-  var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(${site})</b>\n
+  var message = `🔖 <a href="${url}">${redditPost.title}</a> <b>(<a href="${redditPost.permalink}">${site}</a>)</b>\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  ${no_awards}•  🌐 r‏/${redditPost.subreddit}`;
   logger.info("Request completed: video/gif thread");
 
   //nsfw indicator
-  if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
-    console.log("no nsfw!"); return bot.sendMessage(
-      messageId,
-      `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
-      { parse , webPreview: false }
-    );;
-  } //message = "🔞" + message;
-  else if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) message = "🔞" + message;
+  // if (redditPost.over_18 === true && !(whiteList.includes(messageId))) {
+  //   console.log("no nsfw!"); return bot.sendMessage(
+  //     messageId,
+  //     `<i>ERROR: Sorry, In accordance with Telegram's Terms of Service you will not be able to browse NSFW posts anymore.\nIf you have subscribed to this sub, please unsubscribe by sending</i> <code>/unsub ${redditPost.subreddit}</code>\n\n<a href="${redditPost.url}">Open in Browser</a>`,
+  //     { parse , webPreview: false }
+  //   );;
+  // } //message = "🔞" + message;
+  if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) message = "🔞" + message;
 
   var postNum = -1;
   return bot.sendMessage(messageId, message, { parse, markup }).catch(error => {
@@ -2020,7 +2021,7 @@ bot.on("callbackQuery", async msg => {
     //if (!(/^-[0-9]+$/.test(msg.message.chat.id)) || (member.status == 'administrator')) {
       client.get(msg.message.chat.id, function (err, res) {
         res += '+'
-      if (res.includes(subreddit)) {
+      if (res.includes("+" + subreddit.toLowerCase() + "+")) {
         logger.info("ALREADY SUBBED: User(" + msg.from.id + ") : " + msg.text);
         return bot.sendMessage(msg.message.chat.id, `_Duh! You are already subscribed to r‏/${subreddit} 😏\nCheck_ /subscriptions _maybe?_`, { parse })
       }
@@ -2032,7 +2033,7 @@ bot.on("callbackQuery", async msg => {
     //else
     //await bot.answerCallbackQuery(msg.id,'You need to be an admin to unsubscribe!')
   }
-  await bot.answerCallbackQuery(msg.from.id);
+  bot.answerCallbackQuery(msg.id);
   //}
 });
 
@@ -2040,23 +2041,48 @@ bot.on("callbackQuery", async msg => {
   if (msg.data.includes("callback_query_comments")) {
     var [callback, subreddit, id] = msg.data.split(" ")
     console.log(userId + " " + msg.from.id)
-    const url = `https:\/\/www.reddit.com\/r\/${subreddit}\/comments\/${id}.json?`
-    var comments = `💬 _Viewing first ${commentLimit} comments..._`;
+    const url = `https:\/\/www.reddit.com\/r\/${subreddit}\/comments\/${id}.json?sort=top`
+    var comments = ""
+    var count = 0
     console.log(url)
     const sendComments = async url => {
       try {
         const response = await fetch(url);
         const body = await response.json();
-        if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
-          return sendErrorMsg(messageId, subreddit);
-        }
+        // if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
+        //   return sendErrorMsg(messageId, subreddit);
+        // }
         for (i = 0; i < commentLimit; i++) {
-          if (body[1].data.children[0].data.stickied === true)
+          // console.log(i)
+          if (body[1].data.children[i] === undefined) break
+          if (body[1].data.children[i].data.stickied === true) {
+            // console.log("stickied")
             continue; //skip stickied comment
-          else if (body[1].data.children[i] !== undefined) {
-            comments += `\n─────────\n*${body[1].data.children[i].data.author}:*\n` + body[1].data.children[i].data.body;
           }
-          else break
+          else if (body[1].data.children[i] !== undefined) {
+            var timeago = prettytime(body[1].data.children[i].data.created_utc * 1000 - Date.now(), {
+              short: true,
+              decimals: 0
+            });
+            timeago = timeago.replace(/\s/g, "")
+            if(body[1].data.children[i].data.total_awards_received) {
+              var no_awards = `• 🏅${body[1].data.children[i].data.total_awards_received}  `
+            }
+            else
+              var no_awards = ""
+              if(body[1].data.children[i].data.is_submitter) {
+                var op = ` ✏️ `
+              }
+              else
+                var op = ""
+            comments += `\n─────────\n${op}*${body[1].data.children[i].data.author}* • _⬆️ ${body[1].data.children[i].data.score}_ • _⏳${timeago} ${no_awards}_  \n` + body[1].data.children[i].data.body;
+            count += 1
+            // console.log(comments)
+          }
+          else {
+            // console.log("Nothing found");
+            break
+          }
         }
       }
       catch (error) {
@@ -2064,20 +2090,36 @@ bot.on("callbackQuery", async msg => {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
-        print("error in link post")
         console.log(error);
       }
     }
     sendComments(url).then(() => {
-    bot.sendMessage(msg.message.chat.id, `${comments}`, { parse: "Markdown" }).catch(err =>{
-      bot.sendMessage(msg.message.chat.id, "_Sorry, I can't send it due to the comments being too long. Please browse comments using the Link_", { parse: "Markdown" })
+      const markup = bot.inlineKeyboard([
+        [
+
+          bot.inlineButton("🗑 Delete", { callback: "callback_query_delete" })
+        ]
+      ]);
+    // console.log(comments)
+    if (comments == "") {
+      return bot.sendMessage(msg.message.chat.id, "_No comments found_", { parse: "Markdown" })
+    }
+    bot.sendMessage(msg.message.chat.id, `💬 _Viewing first ${count} comments..._${comments}`, { parse: "Markdown" , markup: markup}).catch(err =>{
+      bot.sendMessage(msg.message.chat.id, "_Sorry, Comments to this post are too long. Please browse them using the link above_", { parse: "Markdown" })
+      console.log(err)
     });
     // bot.sendMessage(msg.message.chat.id, `_Comments:\n\n_`, { parse: "Markdown" });
     bot.sendMessage("-1001454024330", "#COMMENTS\n\n"+ msg.from.first_name +" (" + msg.from.id + ")\n" + subreddit);
     });
   }
-  await bot.answerCallbackQuery(msg.id);
-  //}
+  bot.answerCallbackQuery(msg.id);
+});
+
+bot.on("callbackQuery", async msg => {
+  if (msg.data === "callback_query_delete") {
+    bot.deleteMessage(msg.message.chat.id, msg.message.message_id)
+    await bot.answerCallbackQuery(msg.id)
+  }
 });
 
 bot.on("callbackQuery", async msg => {
