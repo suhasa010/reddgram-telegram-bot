@@ -40,11 +40,11 @@ app.listen(process.env.PORT);
 /*
 const isOwner = (req, res, next) => {
   const secret = req.query.secret;
-  
+
   if (secret === process.env.SECRET) {
     return next();
   }
-  
+
   return res.status(401).send('you don\'t have permission');
 }
 
@@ -126,6 +126,24 @@ function updateUser(userId, subreddit, option, postNum) {
   db[userId] = { subreddit, option, postNum };
 }
 
+function isBlockedError(normalizedError) {
+  return (
+    normalizedError.code === 403 ||
+    normalizedError.message.includes("bot was blocked") ||
+    normalizedError.message.includes("chat not found")
+  );
+}
+
+function normalizeError(err) {
+  if (err instanceof Error) return err;
+
+  // convert plain object → Error
+  const e = new Error(err?.description || "Unknown error");
+  e.code = err?.error_code;
+  e.raw = err;
+  return e;
+}
+
 function sendRedditPost(messageId, subreddit, option, postNum) {
   const options = getOptions(option, rLimit);
   var start = new Date();
@@ -133,6 +151,17 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
   const sendRedditPost = async url => {
     try {
       const response = await fetch(url);
+      if (!response.ok) {
+        console.log("Reddit HTTP error:", response.status);
+
+        if (response.status === 429) {
+          // naive backoff
+          await new Promise(r => setTimeout(r, 2000));
+        }
+
+        return;
+      }
+
       const body = await response.json();
       // send error message if the bot encountered one
       if (body.hasOwnProperty("error") || body.data.children.length < 1) {
@@ -207,7 +236,10 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         redditPost.preview.images[0].variants.mp4
       ) {
         bot.sendChatAction(messageId, "upload_video").catch( error => {
-          if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+          const normalizedError = normalizeError(err);
+          if (
+            isBlockedError(normalizedError)
+          ) {
             logger.info(`user ${messageId}'s subscriptions were cleared`)
             return client.del(messageId)
           }
@@ -221,11 +253,13 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
         (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "i.redd.it") ||
         (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "i.imgur.com") ||
         (/\.(gifv|gif)$/.test(redditPost.url) && redditPost.domain === "imgur.com") ||
-        (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it") 
+        (/\.(gif)$/.test(redditPost.url) && redditPost.domain === "preview.redd.it")
         || redditPost.domain === "gfycat.com"
       ) {
         bot.sendChatAction(messageId, "upload_video").catch (error => {
-          if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+          if (
+            isBlockedError(normalizedError)
+          ) {
             logger.info(`user ${messageId}'s subscriptions were cleared`)
             return client.del(messageId)
           }
@@ -262,11 +296,14 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       // unsuccessful response
     }
     catch (error) {
-      if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+      const normalizedError = normalizeError(err);
+      if (
+        isBlockedError(normalizedError)
+      ) {
         logger.info(`user ${messageId}'s subscriptions were cleared`)
         return client.del(messageId)
       }
-      print("error being thrown here")
+      logger.error("error being thrown here")
       console.log(error);
     }
   };
@@ -281,7 +318,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
   //logger.info("http request completed")
 }
 
-//original "request" based code 
+//original "request" based code
 /* function sendRedditPost(messageId, subreddit, option, postNum) {
   const options = getOptions(option, rLimit);
   var start = new Date();
@@ -291,7 +328,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
       //console.log(error)
       // check if response was successful
       if (!error && response.statusCode === 200) {
-        
+
         // send error message if the bot encountered one
         if (body.hasOwnProperty("error") || body.data.children.length < 1) {
           return sendErrorMsg(messageId);
@@ -334,7 +371,7 @@ function sendRedditPost(messageId, subreddit, option, postNum) {
             bot.inlineButton("⏭ Next", { callback: "callback_query_next" })
           ]
         ]);
-        
+
         // if post is an image or if it's a gif or a link
         if (
           /\.(jpe?g|png)$/.test(redditPost.url) ||
@@ -424,7 +461,7 @@ const parse = "HTML";
   const errorMsg = `<i>ERROR: This subreddit is restricted.</i>`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
-  
+
 }*/
 
 function sendErrorMsg(messageId, subreddit) {
@@ -435,7 +472,7 @@ function sendErrorMsg(messageId, subreddit) {
 }
 
 function sendLimitMsg(messageId) {
-  const errorMsg = `_ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option. 
+  const errorMsg = `_ERROR: Sorry, we can't show more than ${rLimit} threads for one option. Please change your subreddit or option.
 Use /help for instructions._`;
   logger.error(errorMsg);
   return bot.sendMessage(messageId, errorMsg, { parse });
@@ -538,8 +575,11 @@ function sendImagePost(messageId, redditPost, markup) {
   //~~fix for memes topy not working, sendMessage with url instead of sendPhoto which was crashing because of a 8.7mb image in "memes topy"~~ reverted back to sendPhoto for some layout refresh.
   //return bot.sendMessage(messageId, caption, { parse, markup })
   else {
-    return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(error => {
-    if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+    return bot.sendPhoto(messageId, url, { caption, parse, markup }).catch(err => {
+  const normalizedError = normalizeError(err);
+      if (
+        isBlockedError(normalizedError)
+      ) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
         }
@@ -596,6 +636,17 @@ function sendLinkPost(messageId, redditPost, markup) {
     const sendBestComment = async url => {
       try {
         const response = await fetch(url);
+        if (!response.ok) {
+          console.log("Reddit HTTP error:", response.status);
+
+          if (response.status === 429) {
+            // naive backoff
+            await new Promise(r => setTimeout(r, 2000));
+          }
+
+          return;
+        }
+
         const body = await response.json();
         if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
           return sendErrorMsg(messageId, redditPost.subreddit);
@@ -606,11 +657,14 @@ function sendLinkPost(messageId, redditPost, markup) {
 
       }
       catch (error) {
-        if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+        const normalizedError = normalizeError(err);
+        if (
+          isBlockedError(normalizedError)
+        ) {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
-        print("error in link post")
+        logger.error("error in link post")
         console.log(error);
       }
     }
@@ -635,7 +689,7 @@ function sendLinkPost(messageId, redditPost, markup) {
       else var points = redditPost.score;
 
       var upvote_ratio = (redditPost.upvote_ratio * 100).toFixed(0);
-      
+
       if(redditPost.total_awards_received) {
         var no_awards = `• 🏅${redditPost.total_awards_received}  `
       }
@@ -659,9 +713,12 @@ function sendLinkPost(messageId, redditPost, markup) {
       //nsfw indicator
       if (redditPost.over_18 === true) message = "🔞" + message;
       var postNum = -1;
-      
-      bot.sendMessage(messageId, message, { parse, markup }).catch(error => {
-        if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+
+      bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+  const normalizedError = normalizeError(err);
+        if (
+          isBlockedError(normalizedError)
+        ) {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
@@ -791,7 +848,7 @@ function sendLinkPost(messageId, redditPost, markup) {
       }
       bot.sendMediaGroup(messageId, allMedia2).catch(err => {console.log("Error Sending Media", err);})
     }
-      
+
     else {
       bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
       userId = `id_${messageId}`;
@@ -876,8 +933,11 @@ function sendGifPost(messageId, redditPost, markup) {
   // } //message = "🔞" + message;
   if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
 
-  return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(error => {
-    if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+  return bot.sendVideo(messageId, gif, { parse, caption, markup }).catch(err => {
+  const normalizedError = normalizeError(err);
+    if (
+      isBlockedError(normalizedError)
+    ) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -936,8 +996,11 @@ function sendAnimPost(messageId, redditPost, markup) {
   // } //caption = "🔞" + caption;
   if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) caption = "🔞" + caption;
   var postNum = -1;
-  return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(error => {
-    if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+  return bot.sendAnimation(messageId, gif, { parse, caption, markup }).catch(err => {
+  const normalizedError = normalizeError(err);
+    if (
+      isBlockedError(normalizedError)
+    ) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -1025,8 +1088,11 @@ function sendVideoPost(messageId, redditPost, markup) {
   if (redditPost.over_18 === true && (messageId == "15024063" || messageId == "576693302")) message = "🔞" + message;
 
   var postNum = -1;
-  return bot.sendMessage(messageId, message, { parse, markup }).catch(error => {
-    if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+  return bot.sendMessage(messageId, message, { parse, markup }).catch(err => {
+  const normalizedError = normalizeError(err);
+    if (
+      isBlockedError(normalizedError)
+) {
       logger.info(`user ${messageId}'s subscriptions were cleared`)
       return client.del(messageId)
     }
@@ -1097,6 +1163,16 @@ function sendMessagePost(messageId, redditPost, markup) {
     const sendBestComment = async url => {
       try {
         const response = await fetch(url);
+        if (!response.ok) {
+          console.log("Reddit HTTP error:", response.status);
+
+          if (response.status === 429) {
+            // naive backoff
+            await new Promise(r => setTimeout(r, 2000));
+          }
+
+          return;
+        }
         const body = await response.json();
         if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
           return sendErrorMsg(messageId, redditPost.subreddit);
@@ -1111,7 +1187,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     }
 
     sendBestComment(url).then(() => {
-      //console.log(bestComment) 
+      //console.log(bestComment)
       let url = redditPost.url;
       url = url.replace(/&amp;/g, "&");
       //let boldtitle = redditPost.title
@@ -1141,7 +1217,7 @@ function sendMessagePost(messageId, redditPost, markup) {
         if (redditPost.subreddit == "explainlikeimfive") {
           const preview = bestComment.slice(0, 3500);
           var message = `🔖 <b>${redditPost.title}</b>\n
-📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n` + preview + selfTextLimitExceeded(messageId) + `\n 
+📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n` + preview + selfTextLimitExceeded(messageId) + `\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  ${no_awards}•  🌐 r‏/${redditPost.subreddit}`;
         }
@@ -1267,7 +1343,7 @@ function sendMessagePost(messageId, redditPost, markup) {
     });
   }
   else {
-    //console.log(bestComment) 
+    //console.log(bestComment)
     let url = redditPost.url;
     url = url.replace(/&amp;/g, "&");
     //let boldtitle = redditPost.title
@@ -1295,7 +1371,7 @@ function sendMessagePost(messageId, redditPost, markup) {
       if (redditPost.subreddit == "explainlikeimfive") {
         const preview = bestComment.slice(0, 3500);
         var message = `🔖 <b>${redditPost.title}</b>\n
-📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n` + preview + selfTextLimitExceeded(messageId) + `\n 
+📝 ${redditPost.selftext}\n\n⭐️<i>Best Answer:</i> \n` + preview + selfTextLimitExceeded(messageId) + `\n
 ⬆️ <b>${points}</b> (${upvote_ratio}%)  •  💬 ${redditPost.num_comments}  •  ⏳ ${timeago} ago
 ✏️ u/${redditPost.author}  ${no_awards}•  🌐 r‏/${redditPost.subreddit}`;
       }
@@ -1726,7 +1802,7 @@ bot.on("text", msg => {
   }
   /* else if (msg.text.includes('/subpaginated')) {
      var bookPages = 100;
- 
+
      function getPagination(current, maxpage) {
        var keys = [];
        if (current > 1) keys.push({ text: `«1`, callback_data: '1' });
@@ -1734,18 +1810,18 @@ bot.on("text", msg => {
        keys.push({ text: `-${current}-`, callback_data: current.toString() });
        if (current < maxpage - 1) keys.push({ text: `${current + 1}›`, callback_data: (current + 1).toString() })
        if (current < maxpage) keys.push({ text: `${maxpage}»`, callback_data: maxpage.toString() });
- 
+
        return {
          reply_markup: JSON.stringify({
            inline_keyboard: [keys]
          })
        };
      }
- 
+
      bot.onText(/\/book/, function (msg) {
        bot.sendMessage(msg.chat.id, 'Page: 25', getPagination(25, bookPages));
      });
- 
+
      bot.on('callback_query', function (message) {
        var msg = message.message;
        var editOptions = Object.assign({}, getPagination(parseInt(message.data), bookPages), { chat_id: msg.chat.id, message_id: msg.message_id });
@@ -1815,9 +1891,9 @@ bot.on("text", msg => {
         subs = res.toLowerCase().split("+");
         //console.log(subs);
         var i;
-        //subs.forEach(subs => 
+        //subs.forEach(subs =>
         {
-          //if (subs === subreddit) 
+          //if (subs === subreddit)
           {
             for (var i = 0; i < subs.length - 1; i++) {
               if (subs[i] == subreddit) {
@@ -2048,6 +2124,17 @@ bot.on("callbackQuery", async msg => {
     const sendComments = async url => {
       try {
         const response = await fetch(url);
+        if (!response.ok) {
+          console.log("Reddit HTTP error:", response.status);
+
+          if (response.status === 429) {
+            // naive backoff
+            await new Promise(r => setTimeout(r, 2000));
+          }
+
+          return;
+        }
+
         const body = await response.json();
         // if (body.hasOwnProperty("error") || body[1].data.children[0].length < 1) {
         //   return sendErrorMsg(messageId, subreddit);
@@ -2086,7 +2173,10 @@ bot.on("callbackQuery", async msg => {
         }
       }
       catch (error) {
-        if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+        const normalizedError = normalizeError(err);
+        if (
+          isBlockedError(normalizedError)
+        ) {
           logger.info(`user ${messageId}'s subscriptions were cleared`)
           return client.del(messageId)
         }
@@ -2445,7 +2535,10 @@ setInterval(function () {
                     sendRedditPost(chat, sub, option, subPostNum);
                   }
                   catch (error) {
-                    if (error.error_code == 403 || error.description.includes("bot was blocked") || error.description.includes("chat not found")) {
+                    const normalizedError = normalizeError(err);
+                    if (
+                      isBlockedError(normalizedError)
+) {
                       logger.info(`user ${messageId}'s subscriptions were cleared`)
                       client.del(msg.chat.id)
                     }
@@ -2505,7 +2598,7 @@ setInterval(function () {
 }, 43200 * 100)
 
 /*function fetchThreads(query, messageId, postNum) {
- 
+
 }
 
 bot.on("inlineQuery", msg => {
@@ -2556,7 +2649,11 @@ bot.on("inlineQuery", msg => {
         }
     }
   );
-  
+
 });*/
+
+process.on("unhandledRejection", (err) => {
+  console.error("UNHANDLED REJECTION:", err);
+});
 
 bot.start();
