@@ -21,8 +21,8 @@ require('dotenv').config();
 const bot = new TeleBot(process.env.BOT_TOKEN);
 
 bot.on("text", msg => {
-  bot.sendMessage(msg.chat.id,"Reddit seems to be down at the moment. Stay tuned for more updates.\nCheck the status here: https://downdetector.com/status/reddit/")
-  //Bot taken down for maintenance. Any updates about the same will be posted on @reddgramIssues. Thanks for the cooperation.")
+  bot.sendMessage(msg.chat.id,"⚠️  Reddit updates are currently unavailable.\n\nReddit has begun blocking the method used by this bot to retrieve subreddit data. The bot remains online, but new Reddit posts may not be delivered until a workaround or approved API access is available.\nUpdates will be posted here as the situation develops.")
+  
 });
        
 bot.connect()
